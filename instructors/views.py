@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from accounts.models import Account
 from .models import Instructor
 from .serializers import InstructorSerializer
-from django.contrib.auth.models import User
+
 
 # POST /instructors - Регистрация нового инструктора
 @api_view(['POST'])
@@ -16,10 +16,17 @@ def create_instructor(request):
             # Получаем Account по email
             account = Account.objects.get(email=data['email'])
 
+            # Проверка наличия и непустого значения qualification
+            qualification = data.get('qualification')
+            if not qualification or len(qualification.strip()) == 0:
+                return Response({"error": "Qualification is required."}, status=status.HTTP_400_BAD_REQUEST)
+
             # Создаем инструктора
-            instructor = Instructor.objects.create(account=account,
-                                                   qualification=data['qualification'],
-                                                   status="Active")
+            instructor = Instructor.objects.create(
+                account=account,
+                qualification=qualification,
+                status="Active"
+            )
             instructor.name = data.get("name", "")
             instructor.save()
 
@@ -35,7 +42,6 @@ def create_instructor(request):
 
         except Exception as e:
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 # PUT /instructors/{instructor_id} - Обновление данных инструктора
