@@ -1,15 +1,19 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import *
+from . import views
 
 router = DefaultRouter()
-router.register(r'training-groups', TrainingGroupViewSet)
-router.register(r'jump-groups', JumpGroupViewSet)
-router.register(r'jump-requests', JumpRequestViewSet)
-router.register(r'pre-jump-checks', PreJumpCheckViewSet)
-router.register(r'jump-assignments', JumpAssignmentViewSet)
+
+# Регистрируем ViewSet для всех моделей
+router.register(r'training-groups', views.TrainingGroupViewSet)
+router.register(r'jump-groups', views.JumpGroupViewSet)
+router.register(r'jump-requests', views.JumpRequestViewSet)
+router.register(r'pre-jump-checks', views.PreJumpCheckViewSet)
+router.register(r'jump-assignments', views.JumpAssignmentViewSet)
+router.register(r'training-progress', views.TrainingProgressViewSet)
+router.register(r'parachutists', views.ParachutistViewSet)
+router.register(r'instructors', views.InstructorViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('pre-jump-checks/<int:group_id>/', PreJumpCheckViewSet.as_view({'get': 'list'})),
+    path('api/', include(router.urls)),  # Все маршруты будут начинаться с /api/
 ]
