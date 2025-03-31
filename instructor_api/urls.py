@@ -4,7 +4,6 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from instructors.urls import router
-from instructors.views import *  # Импортируем views из instructors
 
 # Определяем настройки для Swagger
 schema_view = get_schema_view(
