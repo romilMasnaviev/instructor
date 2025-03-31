@@ -1,17 +1,10 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from instructors.views import *  # Импортируем views из instructors
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 
-# Создаем роутер для viewsets
-router = DefaultRouter()
-router.register(r'training-groups', TrainingGroupViewSet)
-router.register(r'jump-groups', JumpGroupViewSet)
-router.register(r'jump-requests', JumpRequestViewSet)
-router.register(r'pre-jump-checks', PreJumpCheckViewSet)
-router.register(r'jump-assignments', JumpAssignmentViewSet)
+from instructors.urls import router
+from instructors.views import *  # Импортируем views из instructors
 
 # Определяем настройки для Swagger
 schema_view = get_schema_view(
