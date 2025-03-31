@@ -1,4 +1,6 @@
 from django.db import models
+
+
 # 1. Parachutist (Парашютист)
 
 class Parachutist(models.Model):
@@ -60,7 +62,8 @@ class JumpGroup(models.Model):
     jump_date = models.DateTimeField()
     aircraft_type = models.CharField(max_length=255)
     altitude = models.PositiveIntegerField(help_text="Высота в метрах")
-    status = models.CharField(max_length=50, choices=[('Planned', 'Запланирован'), ('Completed', 'Завершен'), ('Cancelled', 'Отменен')], default='Planned')
+    status = models.CharField(max_length=50, choices=[('Planned', 'Запланирован'), ('Completed', 'Завершен'),
+                                                      ('Cancelled', 'Отменен')], default='Planned')
 
     def __str__(self):
         return f"Прыжковая группа {self.jump_date} ({self.status})"
@@ -70,13 +73,13 @@ class JumpGroup(models.Model):
 class JumpRequest(models.Model):
     parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
-    request_status = models.CharField(max_length=50, choices=[('Pending', 'Ожидает'), ('Approved', 'Одобрена'), ('Denied', 'Отклонена')], default='Pending')
+    request_status = models.CharField(max_length=50, choices=[('Pending', 'Ожидает'), ('Approved', 'Одобрена'),
+                                                              ('Denied', 'Отклонена')], default='Pending')
 
     def __str__(self):
         return f"Заявка на прыжок {self.parachutist} в {self.jump_group} ({self.request_status})"
 
 
-# 7. JumpAssignment (Задание на прыжок)
 class JumpAssignment(models.Model):
     parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
@@ -100,4 +103,3 @@ class PreJumpCheck(models.Model):
 
     def __str__(self):
         return f"Проверка перед прыжком для {self.jump_group} ({'Пройдено' if self.theory_passed else 'Не пройдено'})"
-
