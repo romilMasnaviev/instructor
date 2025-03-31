@@ -81,6 +81,9 @@ class JumpAssignment(models.Model):
     parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
     task = models.TextField()
+    score = models.PositiveSmallIntegerField(null=True, blank=True,
+                                             choices=[(i, str(i)) for i in range(6)])  # Оценка от 0 до 5
+    completed = models.BooleanField(default=False)  # Фиксация выполнения прыжка
 
     def __str__(self):
         return f"Задание для {self.parachutist} в {self.jump_group}"
