@@ -9,12 +9,44 @@ from .serializers import TrainingGroupSerializer, JumpGroupSerializer, JumpReque
     JumpAssignmentSerializer, TrainingGroupParachutistSerializer, ParachutistSerializer, InstructorSerializer
 
 
-# 1. TrainingGroupViewSet для учебных групп
+# views.py
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from .models import TrainingGroup
+from .serializers import TrainingGroupSerializer
+
 class TrainingGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = TrainingGroup.objects.all()
     serializer_class = TrainingGroupSerializer
 
+    class TrainingGroupViewSet(viewsets.ModelViewSet):
+        permission_classes = [AllowAny]
+        queryset = TrainingGroup.objects.all()
+        serializer_class = TrainingGroupSerializer
+
+        @action(detail=True, methods=['put'], url_path='status')
+        def update_status(self, request, pk=None):
+            """
+            Кастомный эндпоинт для обновления статуса учебной группы.
+            Путь: /training-groups/{group_id}/status/
+            Позволяет обновить статус учебной группы (Создана, в процессе, завершена).
+            """
+            # TODO : добавить проверку что инструктор,
+            #  который меняет это является инструктором данной группы
+            group = self.get_object()  # Получаем группу по pk
+            new_status = request.data.get('status')
+
+            # Проверяем, что статус передан и является одним из разрешенных
+            if new_status not in dict(TrainingGroup.STATUS_CHOICES):
+                return Response({"error": "Неверный статус."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Обновляем статус
+            group.status = new_status
+            group.save()  # Сохраняем изменения
+
+            return Response(TrainingGroupSerializer(group).data, status=status.HTTP_200_OK)
 
 # 2. JumpGroupViewSet для прыжковых групп
 class JumpGroupViewSet(viewsets.ModelViewSet):

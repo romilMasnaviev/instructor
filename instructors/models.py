@@ -27,19 +27,24 @@ class Instructor(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.qualification})"
 
-
 # 3. TrainingGroup (Учебная группа)
 class TrainingGroup(models.Model):
+    # Определяем возможные статусы для учебной группы через choices
+    STATUS_CHOICES = [
+        ('created', 'Создана'),  # Статус "Создана"
+        ('in_progress', 'В процессе'),  # Статус "В процессе"
+        ('completed', 'Завершена'),  # Статус "Завершена"
+    ]
+
     group_id = models.AutoField(primary_key=True)
-    instructor = models.ForeignKey(Instructor, on_delete=models.CASCADE)
-    group_name = models.CharField(max_length=255)
-    start_date_time = models.DateTimeField()
-    end_date_time = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=50)
+    instructor = models.ForeignKey('Instructor', on_delete=models.CASCADE)  # Убедитесь, что модель Instructor определена
+    group_name = models.CharField(max_length=255)  # Название группы
+    start_date_time = models.DateTimeField()  # Дата и время начала
+    end_date_time = models.DateTimeField(null=True, blank=True)  # Дата и время завершения
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='created')  # Статус с choices
 
     def __str__(self):
-        return f"{self.group_name} ({self.status})"
-
+        return f"{self.group_name} ({self.get_status_display()})"  # Текстовое представление статуса через get_status_display()
 
 # 4. TrainingGroupParachutist (Обучающийся в группе)
 class TrainingGroupParachutist(models.Model):
