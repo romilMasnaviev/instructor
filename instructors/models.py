@@ -47,9 +47,7 @@ class TrainingGroupParachutist(models.Model):
     group = models.ForeignKey(TrainingGroup, on_delete=models.CASCADE)
     theory_passed = models.BooleanField(default=False)
     practice_passed = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ('parachutist', 'group')
+    exam_passed = models.BooleanField(default=False)  # Новое поле для зачета
 
     def __str__(self):
         return f"{self.parachutist} in {self.group}"

@@ -1,5 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
 from .models import TrainingGroup, JumpGroup, JumpRequest, PreJumpCheck, JumpAssignment, TrainingGroupParachutist, \
     Parachutist, Instructor
@@ -48,6 +50,29 @@ class TrainingProgressViewSet(viewsets.ModelViewSet):
     queryset = TrainingGroupParachutist.objects.all()
     serializer_class = TrainingGroupParachutistSerializer
 
+    @action(detail=True, methods=['patch'], url_path='progress')
+    def update_progress(self, request, pk=None):
+        """
+        Кастомный эндпоинт для обновления прогресса парашютиста в учебной группе.
+        Путь: /training-groups/{group_id}/parachutists/{parachutist_id}/progress/
+        Позволяет обновить статусы теории, практики и зачета.
+        """
+        progress = self.get_object()
+        data = request.data
+
+        allowed_fields = {'theory_passed', 'practice_passed', 'exam_passed'}
+        received_fields = set(data.keys())
+
+        invalid_fields = received_fields - allowed_fields
+        if invalid_fields:
+            return Response({"error": f"Неверные поля: {', '.join(invalid_fields)}"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        for field in received_fields:
+            setattr(progress, field, data[field])
+
+        progress.save()
+        return Response(TrainingGroupParachutistSerializer(progress).data, status=status.HTTP_200_OK)
 
 # 7. ParachutistViewSet для парашютистов
 class ParachutistViewSet(viewsets.ModelViewSet):
