@@ -36,4 +36,6 @@ urlpatterns = [
 
     # Добавляем путь для Swagger UI
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/', include('training_groups.urls')),
+    path('api/', include('parachutists.urls')),
 ]
