@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     'rest_framework',  # Добавь REST Framework
     'instructor_api',
     'instructors',
+    'parachutists',
+    'training_groups',
     # Твоё приложение
 ]
 
