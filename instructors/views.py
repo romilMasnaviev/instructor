@@ -2,6 +2,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,6 +21,17 @@ class TrainingGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = TrainingGroup.objects.all()
     serializer_class = TrainingGroupSerializer
+
+    @action(detail=True, methods=['post'],
+            url_path='instructor/(?P<instructor_id>[^/.]+)/start')
+    def start_training(self, request, pk=None, instructor_id=None):
+        group = get_object_or_404(TrainingGroup, pk=pk, instructor_id=instructor_id)
+        group.status = 'in_progress'
+        group.save()
+        return Response({
+            "status": "ok",
+            "group_status": group.status
+        }, status=status.HTTP_200_OK)
 
 
 # 2. JumpGroupViewSet для прыжковых групп
