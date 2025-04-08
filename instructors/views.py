@@ -238,6 +238,54 @@ class StartPreJumpPreparationAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class PreJumpCheckAPIView(APIView):
+    def patch(self, request, instructor_id, jump_group_id, parachutist_id):
+        # Получаем прыжковую группу
+        jump_group = get_object_or_404(JumpGroup, pk=jump_group_id)
+
+        # Получаем парашютиста
+        parachutist = get_object_or_404(Parachutist, pk=parachutist_id)
+
+        # Проверка, что инструктор может менять запись для этого парашютиста
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+        if instructor not in [jump_group.instructor_air, jump_group.instructor_ground]:
+            return Response({
+                "status": "error",
+                "message": "Инструктор не назначен на эту группу."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Проверяем, есть ли задание на прыжок для парашютиста в этой группе
+        jump_assignment = JumpAssignment.objects.filter(parachutist=parachutist, jump_group=jump_group,
+                                                        completed=False).first()
+        if not jump_assignment:
+            return Response({
+                "status": "error",
+                "message": f"Парашютист {parachutist} не имеет незавершенного задания на прыжок в этой группе."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ищем запись PreJumpCheck для данной прыжковой группы и парашютиста
+        pre_jump_check, created = PreJumpCheck.objects.get_or_create(jump_group=jump_group, parachutist=parachutist)
+
+        # Получаем данные из запроса (если они переданы)
+        theory_passed = request.data.get('theory_passed', pre_jump_check.theory_passed)
+        practice_passed = request.data.get('practice_passed', pre_jump_check.practice_passed)
+        medical_certified = request.data.get('medical_certified', pre_jump_check.medical_certified)
+        equipment_checked = request.data.get('equipment_checked', pre_jump_check.equipment_checked)
+
+        # Обновляем запись
+        pre_jump_check.theory_passed = theory_passed
+        pre_jump_check.practice_passed = practice_passed
+        pre_jump_check.medical_certified = medical_certified
+        pre_jump_check.equipment_checked = equipment_checked
+        pre_jump_check.save()
+        # TODO дублируются с training_group_parachutists. Исправить. Также добавить в модель поле что есть
+        #   задание на прыжок
+        return Response({
+            "status": "ok",
+            "message": f"Проверка перед прыжком для парашютиста {parachutist} в группе {jump_group} обновлена."
+        }, status=status.HTTP_200_OK)
+
+
 class TrainingGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = TrainingGroup.objects.all()
