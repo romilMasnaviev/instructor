@@ -452,6 +452,58 @@ class AssignJumpScoreAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class CompleteJumpGroupAPIView(APIView):
+    def post(self, request, instructor_id, jump_group_id):
+        # Получаем прыжковую группу
+        jump_group = get_object_or_404(JumpGroup, pk=jump_group_id)
+
+        # Получаем инструктора
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+        # Проверка, что инструктор может завершить эту группу
+        if instructor not in [jump_group.instructor_air, jump_group.instructor_ground]:
+            return Response({
+                "status": "error",
+                "message": "Инструктор не назначен на эту группу."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Проверяем, что все парашютисты, которые выполнили прыжок, имеют оценку
+        jump_assignments = JumpAssignment.objects.filter(jump_group=jump_group, completed=True)
+        incomplete_assignments = []
+
+        for assignment in jump_assignments:
+            if assignment.score is None:
+                incomplete_assignments.append(assignment.parachutist)
+
+        if incomplete_assignments:
+            return Response({
+                "status": "error",
+                "message": "Не все парашютисты, выполнившие прыжок, имеют оценку.",
+                "incomplete_parachutists": [
+                    {
+                        "parachutist_id": parachutist.parachutist_id,
+                        "name": f"{parachutist.first_name} {parachutist.last_name}"
+                    }
+                    for parachutist in incomplete_assignments
+                ]
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Изменяем статус группы на 'Completed'
+        jump_group.status = 'Completed'
+        jump_group.save()
+
+        # Возвращаем информацию о завершенной группе
+        return Response({
+            "status": "ok",
+            "message": f"Группа {jump_group.id} завершена и переведена в статус 'Completed'.",
+            "jump_group": {
+                "id": jump_group.id,
+                "jump_date": jump_group.jump_date,
+                "aircraft_type": jump_group.aircraft_type,
+                "altitude": jump_group.altitude,
+                "status": jump_group.status
+            }
+        }, status=status.HTTP_200_OK)
 
 
 class TrainingGroupViewSet(viewsets.ModelViewSet):
