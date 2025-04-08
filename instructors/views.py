@@ -1,11 +1,12 @@
 # views.py
+from django.db import models
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.utils import timezone
 
 from .models import JumpGroup
 from .models import JumpRequest, PreJumpCheck, JumpAssignment, TrainingGroupParachutist, \
@@ -39,6 +40,7 @@ class InstructorTrainingGroupsAPIView(APIView):
             groups_data.append(group_data)
 
         return Response(groups_data, status=status.HTTP_200_OK)
+
 
 class StartTrainingAPIView(APIView):
     permission_classes = [AllowAny]
@@ -139,6 +141,55 @@ class EndTrainingAPIView(APIView):
             "status": "ok",
             "group_status": group.status
         }, status=status.HTTP_200_OK)
+
+
+# TODO
+
+class JumpGroupsListAPIView(APIView):
+    def get(self, request, instructor_id):
+        # Проверка, что инструктор существует
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+        # Получаем группы, где он участвует как воздушный или наземный
+        jump_groups = JumpGroup.objects.filter(
+            models.Q(instructor_air=instructor) | models.Q(instructor_ground=instructor)
+        ).distinct()
+
+        result = []
+        for group in jump_groups:
+            # Получаем заявки на прыжки для этой группы
+            requests = JumpRequest.objects.filter(jump_group=group)
+
+            # Список парашютистов
+            parachutists = [
+                {
+                    "id": req.parachutist.parachutist_id,
+                    "full_name": f"{req.parachutist.first_name} {req.parachutist.last_name}",
+                    "request_status": req.request_status,
+                }
+                for req in requests
+            ]
+
+            group_data = {
+                "jump_group_id": group.id,
+                "jump_date": group.jump_date,
+                "aircraft_type": group.aircraft_type,
+                "altitude": group.altitude,
+                "status": group.status,
+                "instructor_air": {
+                    "id": group.instructor_air.instructor_id,
+                    "full_name": f"{group.instructor_air.first_name} {group.instructor_air.last_name}"
+                },
+                "instructor_ground": {
+                    "id": group.instructor_ground.instructor_id,
+                    "full_name": f"{group.instructor_ground.first_name} {group.instructor_ground.last_name}"
+                },
+                "parachutists": parachutists
+            }
+
+            result.append(group_data)
+
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class TrainingGroupViewSet(viewsets.ModelViewSet):

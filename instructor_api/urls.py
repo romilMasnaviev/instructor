@@ -6,7 +6,7 @@ from rest_framework.routers import DefaultRouter
 
 from instructors import views  # Импортируйте ваши ViewSet'ы
 from instructors.views import UpdateCheckpointsAPIView, StartTrainingAPIView, InstructorTrainingGroupsAPIView, \
-    EndTrainingAPIView
+    EndTrainingAPIView, JumpGroupsListAPIView
 
 # Определение Swagger
 schema_view = get_schema_view(
@@ -47,4 +47,35 @@ urlpatterns = [
     path('api/instructor/<int:instructor_id>/training-group/<int:group_id>/end/', EndTrainingAPIView.as_view(),
          name='end-training'),
 
+    # 1. Просмотр прыжковых групп, где инструктор может быть как воздушным, так и наземным
+    path('api/instructor/<int:instructor_id>/jump-groups/',
+         JumpGroupsListAPIView.as_view(),
+         name='jump-groups-list'),
+
+    # # 2. Изменение статуса группы на "Предпрыжковая подготовка"
+    # path('api/instructor/<int:instructor_id>/jump-groups/<int:jump_group_id>/start-preparation/',
+    #      StartPreJumpPreparationAPIView.as_view(),
+    #      name='start-preparation'),
+
+    # # 3. Проверка парашютиста перед прыжком
+    # path(
+    #     'api/instructor/<int:instructor_id>/jump-groups/<int:jump_group_id>/parachutist/<int:parachutist_id>/pre-check/',
+    #     PreJumpCheckAPIView.as_view(),
+    #     name='pre-jump-check'),
+    #
+    # # 4. Изменение статуса на "Выполнение прыжка"
+    # path('api/instructor/<int:instructor_id>/jump-groups/<int:jump_group_id>/start-execution/',
+    #      StartJumpExecutionAPIView.as_view(),
+    #      name='start-jump-execution'),
+    #
+    # # 5. Выставление оценки за прыжок
+    # path(
+    #     'api/instructor/<int:instructor_id>/jump-groups/<int:jump_group_id>/parachutist/<int:parachutist_id>/set-score/',
+    #     AssignJumpScoreAPIView.as_view(),
+    #     name='assign-jump-score'),
+    #
+    # # 6. Завершение прыжковой группы
+    # path('api/instructor/<int:instructor_id>/jump-groups/<int:jump_group_id>/complete/',
+    #      CompleteJumpGroupAPIView.as_view(),
+    #      name='complete-jump-group'),
 ]
