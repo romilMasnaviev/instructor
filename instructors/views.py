@@ -391,6 +391,69 @@ class StartJumpExecutionAPIView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class AssignJumpScoreAPIView(APIView):
+    def post(self, request, instructor_id, jump_group_id, parachutist_id):
+        # Получаем прыжковую группу
+        jump_group = get_object_or_404(JumpGroup, pk=jump_group_id)
+
+        # Получаем парашютиста
+        parachutist = get_object_or_404(Parachutist, pk=parachutist_id)
+
+        # Проверка, что инструктор может выставить оценку
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+        if instructor not in [jump_group.instructor_air, jump_group.instructor_ground]:
+            return Response({
+                "status": "error",
+                "message": "Инструктор не назначен на эту группу."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Проверяем статус заявки на прыжок
+        jump_request = get_object_or_404(JumpRequest, parachutist=parachutist, jump_group=jump_group)
+        if jump_request.request_status != 'Approved':
+            return Response({
+                "status": "error",
+                "message": "Заявка на прыжок не была одобрена."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Получаем score и completed из запроса
+        score = request.data.get('score')
+        completed = request.data.get('completed', False)
+
+        # Проверка на допустимую оценку
+        if score is None or score < 0 or score > 5:
+            return Response({
+                "status": "error",
+                "message": "Оценка должна быть от 0 до 5."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Проверка, существует ли задание для данного парашютиста и группы
+        try:
+            jump_assignment = JumpAssignment.objects.get(parachutist=parachutist, jump_group=jump_group)
+        except JumpAssignment.DoesNotExist:
+            return Response({
+                "status": "error",
+                "message": "Задание для парашютиста не найдено. Убедитесь, что оно существует."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Обновляем задание
+        jump_assignment.score = score
+        jump_assignment.completed = completed
+        jump_assignment.save()
+
+        return Response({
+            "status": "ok",
+            "message": f"Оценка за прыжок для парашютиста {parachutist} в группе {jump_group} выставлена.",
+            "jump_assignment": {
+                "parachutist_id": parachutist.parachutist_id,
+                "name": f"{parachutist.first_name} {parachutist.last_name}",
+                "score": jump_assignment.score,
+                "completed": jump_assignment.completed
+            }
+        }, status=status.HTTP_200_OK)
+
+
+
+
 class TrainingGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = TrainingGroup.objects.all()
