@@ -6,7 +6,8 @@ from rest_framework.routers import DefaultRouter
 
 from instructors import views  # Импортируйте ваши ViewSet'ы
 from instructors.views import UpdateCheckpointsAPIView, StartTrainingAPIView, InstructorTrainingGroupsAPIView, \
-    EndTrainingAPIView, JumpGroupsListAPIView, StartPreJumpPreparationAPIView, PreJumpCheckAPIView
+    EndTrainingAPIView, JumpGroupsListAPIView, StartPreJumpPreparationAPIView, PreJumpCheckAPIView, \
+    StartJumpExecutionAPIView
 
 # Определение Swagger
 schema_view = get_schema_view(
@@ -63,7 +64,7 @@ urlpatterns = [
         PreJumpCheckAPIView.as_view(),
         name='pre-jump-check'),
 
-    # 4. Изменение статуса на "Выполнение прыжка"
+    # 4. Изменение статуса на ('Jump', 'Выполнение прыжка')
     path('api/instructor/<int:instructor_id>/jump-groups/<int:jump_group_id>/start-execution/',
          StartJumpExecutionAPIView.as_view(),
          name='start-jump-execution'),

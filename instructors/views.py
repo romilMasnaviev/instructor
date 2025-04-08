@@ -286,6 +286,111 @@ class PreJumpCheckAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+class StartJumpExecutionAPIView(APIView):
+    def post(self, request, instructor_id, jump_group_id):
+        # Получаем прыжковую группу
+        jump_group = get_object_or_404(JumpGroup, pk=jump_group_id)
+
+        # Получаем инструктора
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+        # Проверка, что инструктор может менять статус группы
+        if instructor not in [jump_group.instructor_air, jump_group.instructor_ground]:
+            return Response({
+                "status": "error",
+                "message": "Инструктор не назначен на эту группу."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Проверка, что статус группы "В процессе"
+        if jump_group.status != 'Progress':
+            return Response({
+                "status": "error",
+                "message": "Группа не в статусе 'В процессе', нельзя начать выполнение прыжка."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Получаем все заявки на прыжок для данной группы
+        jump_requests = JumpRequest.objects.filter(jump_group=jump_group)
+
+        # Список парашютистов, прошедших все проверки
+        approved_parachutists = []
+        denied_parachutists = []
+
+        for jump_request in jump_requests:
+            parachutist = jump_request.parachutist
+
+            # Получаем PreJumpCheck для каждого парашютиста
+            pre_jump_check = get_object_or_404(PreJumpCheck, jump_group=jump_group, parachutist=parachutist)
+
+            # Проверка, что все поля в PreJumpCheck установлены в True
+            if not (pre_jump_check.theory_passed and pre_jump_check.practice_passed and
+                    pre_jump_check.medical_certified and pre_jump_check.equipment_checked):
+                # Если хотя бы одно поле не True, добавляем парашютиста в список отклоненных и обновляем статус заявки
+                denied_parachutists.append(parachutist)
+                jump_request.request_status = 'Denied'
+                jump_request.save()
+            else:
+                # Если все поля пройдены, добавляем парашютиста в список одобренных и обновляем статус заявки
+                approved_parachutists.append(parachutist)
+                jump_request.request_status = 'Approved'
+                jump_request.save()
+
+        # Обновляем статус группы только если хотя бы один парашютист прошел все проверки
+        if approved_parachutists:
+            # Изменяем статус группы на 'Jump' (Выполнение прыжка)
+            jump_group.status = 'Jump'
+            jump_group.save()
+
+            # Возвращаем информацию о группе, парашютистах, которые будут прыгать, и инструкторах
+            return Response({
+                "status": "ok",
+                "message": f"Группа {jump_group.id} переведена в статус 'Выполнение прыжка'.",
+                "jump_group": {
+                    "id": jump_group.id,
+                    "jump_date": jump_group.jump_date,
+                    "aircraft_type": jump_group.aircraft_type,
+                    "altitude": jump_group.altitude,
+                    "status": jump_group.status
+                },
+                "approved_parachutists": [
+                    {
+                        "parachutist_id": parachutist.parachutist_id,
+                        "name": f"{parachutist.first_name} {parachutist.last_name}"
+                    }
+                    for parachutist in approved_parachutists
+                ],
+                "denied_parachutists": [
+                    {
+                        "parachutist_id": parachutist.parachutist_id,
+                        "name": f"{parachutist.first_name} {parachutist.last_name}"
+                    }
+                    for parachutist in denied_parachutists
+                ],
+                "instructors": [
+                    {
+                        "instructor_id": jump_group.instructor_air.instructor_id,
+                        "name": f"{jump_group.instructor_air.first_name} {jump_group.instructor_air.last_name} ({jump_group.instructor_air.qualification})"
+                    },
+                    {
+                        "instructor_id": jump_group.instructor_ground.instructor_id,
+                        "name": f"{jump_group.instructor_ground.first_name} {jump_group.instructor_ground.last_name} ({jump_group.instructor_ground.qualification})"
+                    }
+                ]
+            }, status=status.HTTP_200_OK)
+
+        # Если ни один парашютист не прошел проверки, возвращаем информацию о том, что все отклонены
+        return Response({
+            "status": "info",
+            "message": "Все парашютисты отклонены. Они не прошли все необходимые проверки.",
+            "denied_parachutists": [
+                {
+                    "parachutist_id": parachutist.parachutist_id,
+                    "name": f"{parachutist.first_name} {parachutist.last_name}"
+                }
+                for parachutist in denied_parachutists
+            ]
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
 class TrainingGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = TrainingGroup.objects.all()
