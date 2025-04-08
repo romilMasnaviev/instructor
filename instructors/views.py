@@ -192,6 +192,52 @@ class JumpGroupsListAPIView(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class StartPreJumpPreparationAPIView(APIView):
+    def post(self, request, instructor_id, jump_group_id):
+        # Получаем прыжковую группу
+        jump_group = get_object_or_404(JumpGroup, pk=jump_group_id)
+
+        # Получаем инструктора
+        instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+        # Проверка, что инструктор может менять статус группы
+        if instructor not in [jump_group.instructor_air, jump_group.instructor_ground]:
+            return Response({
+                "status": "error",
+                "message": "Инструктор не назначен на эту группу."
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Проверка, что статус группы — "Запланирован"
+        if jump_group.status != 'Created':
+            return Response({
+                "status": "error",
+                "message": "Группа не в статусе 'Создана', нельзя начать подготовку."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Изменяем статус на "В процессе"
+        jump_group.status = 'Progress'
+        jump_group.save()
+
+        # Получаем всех парашютистов, которые подали заявку на участие в данной группе
+        jump_requests = JumpRequest.objects.filter(jump_group=jump_group)
+
+        # Создаем объект PreJumpCheck для каждого парашютиста
+        for jump_request in jump_requests:
+            PreJumpCheck.objects.create(
+                jump_group=jump_group,
+                parachutist=jump_request.parachutist,
+                theory_passed=False,
+                practice_passed=False,
+                medical_certified=False,
+                equipment_checked=False
+            )
+
+        return Response({
+            "status": "ok",
+            "message": f"Статус группы '{jump_group.id}' изменен на 'В процессе'. Объекты PreJumpCheck для парашютистов созданы."
+        }, status=status.HTTP_200_OK)
+
+
 class TrainingGroupViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     queryset = TrainingGroup.objects.all()

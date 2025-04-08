@@ -69,7 +69,7 @@ class JumpGroup(models.Model):
     jump_date = models.DateTimeField()
     aircraft_type = models.CharField(max_length=255)
     altitude = models.PositiveIntegerField(help_text="Высота в метрах")
-    status = models.CharField(max_length=50, choices=[('Planned', 'Запланирован'), ('Completed', 'Завершен'),
+    status = models.CharField(max_length=50, choices=[('Created', 'Создана'),('Progress', 'В процессе'), ('Completed', 'Завершен'),
                                                       ('Cancelled', 'Отменен')], default='Planned')
 
     def __str__(self):
