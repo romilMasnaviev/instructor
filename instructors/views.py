@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils import timezone
 
 from .models import JumpGroup
 from .models import JumpRequest, PreJumpCheck, JumpAssignment, TrainingGroupParachutist, \
@@ -38,6 +39,29 @@ class InstructorTrainingGroupsAPIView(APIView):
             groups_data.append(group_data)
 
         return Response(groups_data, status=status.HTTP_200_OK)
+
+class StartTrainingAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, instructor_id, group_id):
+        # Получаем группу и проверяем, что инструктор совпадает
+        group = get_object_or_404(TrainingGroup, pk=group_id, instructor_id=instructor_id)
+
+        # Проверка, что группа в статусе "created"
+        if group.status != 'created':
+            return Response({
+                "status": "error",
+                "message": "Группа уже не в статусе 'Создана', нельзя начать обучение."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Меняем статус на "in_progress"
+        group.status = 'in_progress'
+        group.save()
+
+        return Response({
+            "status": "ok",
+            "group_status": group.status
+        }, status=status.HTTP_200_OK)
 
 
 class UpdateCheckpointsAPIView(APIView):
@@ -80,6 +104,11 @@ class UpdateCheckpointsAPIView(APIView):
         training_progress.theory_passed = theory_passed
         training_progress.practice_passed = practice_passed
         training_progress.exam_passed = exam_passed
+
+        # Обновляем поле ready_for_jump в зависимости от выполнения всех чекпоинтов
+        training_progress.ready_for_jump = theory_passed and practice_passed and exam_passed
+
+        # Сохраняем изменения
         training_progress.save()
 
         return Response({
@@ -87,22 +116,23 @@ class UpdateCheckpointsAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-class StartTrainingAPIView(APIView):
+class EndTrainingAPIView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, instructor_id, group_id):
         # Получаем группу и проверяем, что инструктор совпадает
         group = get_object_or_404(TrainingGroup, pk=group_id, instructor_id=instructor_id)
 
-        # Проверка, что группа в статусе "created"
-        if group.status != 'created':
+        # Проверка, что группа в статусе "in_progress"
+        if group.status != 'in_progress':
             return Response({
                 "status": "error",
-                "message": "Группа уже не в статусе 'Создана', нельзя начать обучение."
+                "message": "Группа не в процессе, нельзя завершить обучение."
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Меняем статус на "in_progress"
-        group.status = 'in_progress'
+        # Меняем статус на "completed"
+        group.status = 'completed'
+        group.end_date_time = timezone.now()  # Выставляем дату завершения
         group.save()
 
         return Response({

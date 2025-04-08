@@ -56,6 +56,7 @@ class TrainingGroupParachutist(models.Model):
     theory_passed = models.BooleanField(default=False)
     practice_passed = models.BooleanField(default=False)
     exam_passed = models.BooleanField(default=False)  # Новое поле для зачета
+    ready_for_jump = models.BooleanField(default=False)  # Новое поле
 
     def __str__(self):
         return f"{self.parachutist} in {self.group}"

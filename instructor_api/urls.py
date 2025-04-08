@@ -5,7 +5,8 @@ from rest_framework import permissions
 from rest_framework.routers import DefaultRouter
 
 from instructors import views  # Импортируйте ваши ViewSet'ы
-from instructors.views import UpdateCheckpointsAPIView, StartTrainingAPIView, InstructorTrainingGroupsAPIView
+from instructors.views import UpdateCheckpointsAPIView, StartTrainingAPIView, InstructorTrainingGroupsAPIView, \
+    EndTrainingAPIView
 
 # Определение Swagger
 schema_view = get_schema_view(
@@ -40,6 +41,10 @@ urlpatterns = [
          name='instructor-training-groups'),
     path('api/instructor/<int:instructor_id>/training-group/<int:group_id>/start/', StartTrainingAPIView.as_view(),
          name='start-training'),
-    path('api/instructor/<int:instructor_id>/training-group/<int:group_id>/parachutist/<int:parachutist_id>/update-checkpoints/',
+    path(
+        'api/instructor/<int:instructor_id>/training-group/<int:group_id>/parachutist/<int:parachutist_id>/update-checkpoints/',
         UpdateCheckpointsAPIView.as_view(), name='update-checkpoints'),
+    path('api/instructor/<int:instructor_id>/training-group/<int:group_id>/end/', EndTrainingAPIView.as_view(),
+         name='end-training'),
+
 ]
