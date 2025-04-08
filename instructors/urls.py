@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
+from .views import InstructorTrainingGroupsAPIView
 
 router = DefaultRouter()
 
@@ -16,4 +17,6 @@ router.register(r'instructors', views.InstructorViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),  # Все маршруты будут начинаться с /api/
+    path('api/instructor/<int:instructor_id>/training-groups/', InstructorTrainingGroupsAPIView.as_view()),
+
 ]

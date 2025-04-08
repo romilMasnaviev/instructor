@@ -24,10 +24,8 @@ urlpatterns = [
     path('', include(router.urls)),
 
     # Подключаем URL-ы из instructors.urls
-    path('instructors/', include('instructors.urls')),  # Убедитесь, что путь в 'instructors.urls' правильный
+    path('', include('instructors.urls')),
 
     # Добавляем путь для Swagger UI
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('api/', include('training_groups.urls')),
-    path('api/', include('parachutists.urls')),
 ]
