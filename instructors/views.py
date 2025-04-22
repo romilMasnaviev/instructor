@@ -1,12 +1,14 @@
 # views.py
 
 from django.db import models
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404, redirect
+from django.http import Http404
+from django.http import HttpResponseForbidden
+from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import render
 
-from .models import Instructor, TrainingGroupParachutist
-from .models import JumpGroup
+from .models import JumpGroup, Instructor, JumpRequest, PreJumpCheck
 from .models import TrainingGroup
+from .models import TrainingGroupParachutist, JumpAssignment
 
 
 # Получение расписания инструктора
@@ -79,6 +81,7 @@ def start_training(request, group_id):
     # После изменения статуса перенаправляем пользователя обратно на страницу группы
     return redirect('training_group_detail', instructor_id=instructor_id, group_id=group_id)
 
+
 # Обработчик для изменения статуса группы на "completed"
 def complete_training(request, group_id):
     # Получаем учебную группу по group_id
@@ -95,8 +98,6 @@ def complete_training(request, group_id):
     # Перенаправляем обратно на страницу группы
     return redirect('training_group_detail', instructor_id=instructor_id, group_id=group_id)
 
-
-from django.shortcuts import get_object_or_404, redirect
 
 def update_theory(request, parachutist_id, group_id):
     if request.method == 'POST':
@@ -133,10 +134,99 @@ def update_exam(request, parachutist_id, group_id):
         _recalculate_ready_for_jump(record)
     return redirect('training_group_detail', instructor_id=record.group.instructor.instructor_id, group_id=group_id)
 
+
 def _recalculate_ready_for_jump(record):
     record.ready_for_jump = (
-        record.theory_passed and
-        record.practice_passed and
-        record.exam_passed
+            record.theory_passed and
+            record.practice_passed and
+            record.exam_passed
     )
     record.save()
+
+
+def jump_group_detail(request, instructor_id, group_id):
+    # Получаем объект инструктора по его ID
+    instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+    # Получаем прыжковую группу по group_id
+    group = get_object_or_404(JumpGroup, pk=group_id)
+
+    # Проверяем, что группа принадлежит данному инструктору (если необходимо)
+    if group.instructor_ground != instructor and group.instructor_air != instructor:
+        raise Http404("Доступ запрещен: Инструктор не связан с данной группой")
+
+    # Получаем заявки на прыжок для этой группы
+    jump_requests = JumpRequest.objects.filter(jump_group=group)
+
+    # Получаем задания для парашютистов в этой группе
+    jump_assignments = JumpAssignment.objects.filter(jump_group=group)
+
+    # Получаем проверки перед прыжком для парашютистов в этой группе
+    pre_jump_checks = PreJumpCheck.objects.filter(jump_group=group)
+
+    context = {
+        'group': group,
+        'instructor': instructor,
+        'jump_requests': jump_requests,
+        'jump_assignments': jump_assignments,
+        'pre_checks': pre_jump_checks,  # вот здесь ключ меняем
+        'instructor_id': instructor.instructor_id,
+    }
+
+    return render(request, 'jump_group_detail.html', context)
+
+
+def start_jump_group(request, instructor_id, group_id):
+    # Получаем прыжковую группу
+    group = get_object_or_404(JumpGroup, pk=group_id)
+
+    # Получаем инструктора
+    instructor = get_object_or_404(Instructor, pk=instructor_id)
+
+    # Проверка, что инструктор может менять статус группы
+    if instructor not in [group.instructor_air, group.instructor_ground]:
+        return HttpResponseForbidden("Инструктор не назначен на эту группу.")
+
+    # Проверка, что группа в статусе 'Created'
+    if group.status != 'Created':
+        return HttpResponseForbidden("Группа не может быть переведена в 'В процессе'.")
+
+    # Изменяем статус группы на 'Progress'
+    group.status = 'Progress'
+    group.save()
+
+    # Получаем все заявки на прыжок для данной группы
+    jump_requests = JumpRequest.objects.filter(jump_group=group)
+
+    # Создаем объект PreJumpCheck для каждого парашютиста
+    for jump_request in jump_requests:
+        parachutist = jump_request.parachutist
+
+        training_group_parachutist = TrainingGroupParachutist.objects.filter(parachutist=parachutist).first()
+
+        # Если такая запись существует, подгружаем нужные значения
+        if training_group_parachutist:
+            theory_passed = training_group_parachutist.theory_passed
+            practice_passed = training_group_parachutist.practice_passed
+        else:
+            # Если записи нет, устанавливаем значения по умолчанию
+            theory_passed = False
+            practice_passed = False
+
+        # Проверяем, есть ли уже проверка перед прыжком для этого парашютиста
+        pre_jump_check = PreJumpCheck.objects.filter(jump_group=group, parachutist=parachutist).first()
+
+        # Если проверка еще не существует, создаем новую запись
+        if not pre_jump_check:
+            # Создаем запись PreJumpCheck с подгруженными значениями
+            PreJumpCheck.objects.create(
+                jump_group=group,
+                parachutist=parachutist,
+                theory_passed=theory_passed,
+                practice_passed=practice_passed,
+                medical_certified=False,
+                equipment_checked=False  # По умолчанию оставляем False
+            )
+
+    # Перенаправляем обратно на страницу группы
+    return redirect('jump_group_detail', instructor_id=instructor_id, group_id=group.id)
