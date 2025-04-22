@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ group.group_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f4f4f4;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #f2f2f2;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .form-input {
+            width: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<h1>{{ group.group_name }}</h1>
+<a href="{% url 'instructor_schedule' group.instructor.pk %}" class="button">Вернуться к расписанию</a>
+<div class="card">
+    <p><strong>Время начала:</strong> {{ group.start_date_time|date:"d.m.Y H:i" }}</p>
+    <p><strong>Статус:</strong> {{ group.get_status_display }}</p>
+
+    <!-- Кнопка "Начать обучение", только если статус еще не "in_progress" -->
+    <!-- Кнопка управления обучением -->
+    {% if group.status != 'in_progress' and group.status != 'completed' %}
+        <form method="post" action="{% url 'start_training' group.group_id %}">
+            {% csrf_token %}
+            <button type="submit" class="button">Начать обучение</button>
+        </form>
+    {% elif group.status == 'in_progress' %}
+        <form method="post" action="{% url 'complete_training' group.group_id %}">
+            {% csrf_token %}
+            <button type="submit" class="button">Завершить обучение</button>
+        </form>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Обучающиеся</h2>
+    <table class="table">
+        <tr>
+            <th>ФИО</th>
+            <th>Теория</th>
+            <th>Практика</th>
+            <th>Экзамен</th>
+            <th>Допуск к прыжку</th>
+        </tr>
+        {% for trainee in trainees %}
+            <tr>
+                <td>{{ trainee.parachutist.last_name }} {{ trainee.parachutist.first_name }} {{ trainee.parachutist.middle_name }}</td>
+
+                <td>
+                    {% if group.status == 'in_progress' %}
+                        <form method="post"
+                              action="{% url 'update_theory' trainee.parachutist.parachutist_id group.group_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="button">
+                                {{ trainee.theory_passed|yesno:"✅,❌" }}
+                            </button>
+                        </form>
+                    {% else %}
+                        {{ trainee.theory_passed|yesno:"✅,❌" }}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if group.status == 'in_progress' %}
+                        <form method="post"
+                              action="{% url 'update_practice' trainee.parachutist.parachutist_id group.group_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="button">
+                                {{ trainee.practice_passed|yesno:"✅,❌" }}
+                            </button>
+                        </form>
+                    {% else %}
+                        {{ trainee.practice_passed|yesno:"✅,❌" }}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if group.status == 'in_progress' %}
+                        <form method="post"
+                              action="{% url 'update_exam' trainee.parachutist.parachutist_id group.group_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="button">
+                                {{ trainee.exam_passed|yesno:"✅,❌" }}
+                            </button>
+                        </form>
+                    {% else %}
+                        {{ trainee.exam_passed|yesno:"✅,❌" }}
+                    {% endif %}
+                </td>
+
+                <td>{{ trainee.ready_for_jump|yesno:"✅,❌" }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5">Нет обучающихся в группе.</td>
+            </tr>
+        {% endfor %}
+    </table>
+</div>
+</body>
+</html>
