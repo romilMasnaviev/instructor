@@ -1,0 +1,38 @@
+<!-- templates/edit_checkpoint.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование чекпоинтов</title>
+</head>
+<body>
+    <h1>Редактирование чекпоинтов для {{ parachutist_group.parachutist.first_name }} {{ parachutist_group.parachutist.last_name }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>
+            Теория:
+            <input type="checkbox" name="theory_passed" {% if parachutist_group.theory_passed %}checked{% endif %}>
+        </label><br>
+
+        <label>
+            Практика:
+            <input type="checkbox" name="practice_passed" {% if parachutist_group.practice_passed %}checked{% endif %}>
+        </label><br>
+
+        <label>
+            Экзамен:
+            <input type="checkbox" name="exam_passed" {% if parachutist_group.exam_passed %}checked{% endif %}>
+        </label><br>
+
+        <p>Готов к прыжку: {% if parachutist_group.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}</p>
+
+        {% if training_group.status == 'in_progress' %}
+            <button type="submit">Сохранить изменения</button>
+        {% endif %}
+    </form>
+
+    <p><a href="{% url 'training_group_detail' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}">← Назад к учебной группе</a></p>
+</body>
+</html>

@@ -61,6 +61,11 @@ class TrainingGroupParachutist(models.Model):
     def __str__(self):
         return f"{self.parachutist} in {self.group}"
 
+    def save(self, *args, **kwargs):
+        # Обновляем поле ready_for_jump на основе значений чекпоинтов
+        self.ready_for_jump = self.theory_passed and self.practice_passed and self.exam_passed
+        super().save(*args, **kwargs)
+
 
 # 5. JumpGroup (Прыжковая группа)
 class JumpGroup(models.Model):

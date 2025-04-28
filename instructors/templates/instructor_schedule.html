@@ -1,0 +1,77 @@
+<!-- templates/instructor_schedule.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Расписание инструктора {{ instructor.first_name }} {{ instructor.last_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f2f2f2;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+<h1>Расписание инструктора {{ instructor.first_name }} {{ instructor.last_name }}</h1>
+
+<div class="section">
+    <h2>Учебные группы</h2>
+    {% if training_groups %}
+        <ul>
+            {% for group in training_groups %}
+                <li>
+                    <a href="{% url 'training_group_detail' instructor_id=instructor.instructor_id training_group_id=group.group_id %}">
+                        <strong>{{ group.group_name }}</strong>
+                    </a><br>
+                    Статус: {{ group.get_status_display }}<br>
+                    Начало: {{ group.start_date_time|date:"d.m.Y H:i" }}<br>
+                    {% if group.end_date_time %}
+                        Завершение: {{ group.end_date_time|date:"d.m.Y H:i" }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет назначенных учебных групп.</p>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>Прыжковые группы</h2>
+    {% if jump_groups %}
+        <ul>
+            {% for jump in jump_groups %}
+                <li>
+                    Дата прыжка: {{ jump.jump_date|date:"d.m.Y H:i" }}<br>
+                    Самолет: {{ jump.aircraft_type }}<br>
+                    Высота: {{ jump.altitude }} м<br>
+                    Статус: {{ jump.get_status_display }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Нет назначенных прыжковых групп.</p>
+    {% endif %}
+</div>
+</body>
+</html>

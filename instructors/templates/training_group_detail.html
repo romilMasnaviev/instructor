@@ -1,151 +1,92 @@
+<!-- templates/training_group_detail.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>{{ group.group_name }}</title>
+    <title>{{ training_group.group_name }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 20px;
-            background: #f4f4f4;
+            margin: 20px;
         }
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+        h1, h2 {
+            color: #333;
         }
 
-        .status {
+        .passed {
+            color: green;
             font-weight: bold;
-            margin-bottom: 10px;
         }
 
-        .table {
-            width: 100%;
-            border-collapse: collapse;
+        .failed {
+            color: red;
+            font-weight: bold;
         }
 
-        .table th, .table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: center;
-        }
-
-        .table th {
-            background-color: #f2f2f2;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-top: 20px;
-            background-color: #4CAF50;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
+        .parachutist-name {
+            color: #007bff;
             cursor: pointer;
-        }
-
-        .button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-
-        .form-input {
-            width: 30px;
-            text-align: center;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-<h1>{{ group.group_name }}</h1>
-<a href="{% url 'instructor_schedule' group.instructor.pk %}" class="button">Вернуться к расписанию</a>
-<div class="card">
-    <p><strong>Время начала:</strong> {{ group.start_date_time|date:"d.m.Y H:i" }}</p>
-    <p><strong>Статус:</strong> {{ group.get_status_display }}</p>
+<h1>Учебная группа: {{ training_group.group_name }}</h1>
+<p><strong>Инструктор:</strong> {{ instructor.first_name }} {{ instructor.last_name }}</p>
+<p><strong>Статус:</strong> {{ training_group.get_status_display }}</p>
+<p><strong>Дата начала:</strong> {{ training_group.start_date_time|date:"d.m.Y H:i" }}</p>
+{% if training_group.end_date_time %}
+    <p><strong>Дата окончания:</strong> {{ training_group.end_date_time|date:"d.m.Y H:i" }}</p>
+{% endif %}
 
-    <!-- Кнопка "Начать обучение", только если статус еще не "in_progress" -->
-    <!-- Кнопка управления обучением -->
-    {% if group.status != 'in_progress' and group.status != 'completed' %}
-        <form method="post" action="{% url 'start_training' group.group_id %}">
-            {% csrf_token %}
-            <button type="submit" class="button">Начать обучение</button>
-        </form>
-    {% elif group.status == 'in_progress' %}
-        <form method="post" action="{% url 'complete_training' group.group_id %}">
-            {% csrf_token %}
-            <button type="submit" class="button">Завершить обучение</button>
-        </form>
-    {% endif %}
-</div>
+<!-- Кнопки для изменения статуса группы -->
+{% if training_group.status == 'created' %}
+    <a href="{% url 'start_training' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}">
+        <button>Начать обучение</button>
+    </a>
+{% elif training_group.status == 'in_progress' %}
+    <a href="{% url 'complete_training' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}">
+        <button>Завершить обучение</button>
+    </a>
+{% endif %}
 
-<div class="card">
-    <h2>Обучающиеся</h2>
-    <table class="table">
-        <tr>
-            <th>ФИО</th>
-            <th>Теория</th>
-            <th>Практика</th>
-            <th>Экзамен</th>
-            <th>Допуск к прыжку</th>
-        </tr>
-        {% for trainee in trainees %}
-            <tr>
-                <td>{{ trainee.parachutist.last_name }} {{ trainee.parachutist.first_name }} {{ trainee.parachutist.middle_name }}</td>
-
-                <td>
-                    {% if group.status == 'in_progress' %}
-                        <form method="post"
-                              action="{% url 'update_theory' trainee.parachutist.parachutist_id group.group_id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="button">
-                                {{ trainee.theory_passed|yesno:"✅,❌" }}
-                            </button>
-                        </form>
+<h2>Парашютисты</h2>
+{% if group_parachutists %}
+    <ul>
+        {% for gp in group_parachutists %}
+            <li>
+                <strong>
+                    <!-- Кликабельное ФИО парашютиста -->
+                    {% if training_group.status == 'in_progress' %}
+                        <a href="{% url 'edit_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}" class="parachutist-name">
+                            {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
+                        </a>
                     {% else %}
-                        {{ trainee.theory_passed|yesno:"✅,❌" }}
+                        {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
                     {% endif %}
-                </td>
-
-                <td>
-                    {% if group.status == 'in_progress' %}
-                        <form method="post"
-                              action="{% url 'update_practice' trainee.parachutist.parachutist_id group.group_id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="button">
-                                {{ trainee.practice_passed|yesno:"✅,❌" }}
-                            </button>
-                        </form>
-                    {% else %}
-                        {{ trainee.practice_passed|yesno:"✅,❌" }}
-                    {% endif %}
-                </td>
-
-                <td>
-                    {% if group.status == 'in_progress' %}
-                        <form method="post"
-                              action="{% url 'update_exam' trainee.parachutist.parachutist_id group.group_id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="button">
-                                {{ trainee.exam_passed|yesno:"✅,❌" }}
-                            </button>
-                        </form>
-                    {% else %}
-                        {{ trainee.exam_passed|yesno:"✅,❌" }}
-                    {% endif %}
-                </td>
-
-                <td>{{ trainee.ready_for_jump|yesno:"✅,❌" }}</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="5">Нет обучающихся в группе.</td>
-            </tr>
+                </strong>
+                <ul>
+                    <li>Теория: <span class="{% if gp.theory_passed %}passed{% else %}failed{% endif %}">
+                    {% if gp.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                </span></li>
+                    <li>Практика: <span class="{% if gp.practice_passed %}passed{% else %}failed{% endif %}">
+                    {% if gp.practice_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                </span></li>
+                    <li>Экзамен: <span class="{% if gp.exam_passed %}passed{% else %}failed{% endif %}">
+                    {% if gp.exam_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                </span></li>
+                    <li>Готов к прыжку: <span class="{% if gp.ready_for_jump %}passed{% else %}failed{% endif %}">
+                    {% if gp.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}
+                </span></li>
+                </ul>
+            </li>
         {% endfor %}
-    </table>
-</div>
+    </ul>
+{% else %}
+    <p>В этой группе пока нет парашютистов.</p>
+{% endif %}
+
+<p><a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}">← Назад к расписанию</a></p>
 </body>
 </html>
