@@ -71,16 +71,16 @@ class TrainingGroupParachutist(models.Model):
 class JumpGroup(models.Model):
     instructor_air = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='air_instructor')
     instructor_ground = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='ground_instructor')
-    group_name = models.CharField(max_length=255, default="")  # <--- новое поле: название группы
-    start_date_time = models.DateTimeField(null=True, blank=True)  # <--- новое поле: начало
-    end_date_time = models.DateTimeField(null=True, blank=True)  # <--- новое поле: завершение
+    group_name = models.CharField(max_length=255, default="")
+    start_date_time = models.DateTimeField(null=True, blank=True)
+    end_date_time = models.DateTimeField(null=True, blank=True)
     jump_date = models.DateTimeField()
     aircraft_type = models.CharField(max_length=255)
     altitude = models.PositiveIntegerField(help_text="Высота в метрах")
     status = models.CharField(
         max_length=50,
         choices=[
-            ('Created', 'Создана'),
+            ('created', 'Создана'),
             ('Pre-Flight Preparation', 'Предполетная подготовка'),
             ('Jump In Progress', 'Прыжок в процессе'),
             ('Completed', 'Завершена'),
@@ -93,17 +93,7 @@ class JumpGroup(models.Model):
         return f"Прыжковая группа {self.group_name} ({self.status})"
 
 
-# 6. JumpRequest (Заявка на прыжок)
-class JumpRequest(models.Model):
-    parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
-    jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
-    request_status = models.CharField(max_length=50, choices=[('Pending', 'Ожидает'), ('Approved', 'Одобрена'),
-                                                              ('Denied', 'Отклонена')], default='Pending')
-
-    def __str__(self):
-        return f"Заявка на прыжок {self.parachutist} в {self.jump_group} ({self.request_status})"
-
-
+# 6. Задание на прыжок
 class JumpAssignment(models.Model):
     parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
@@ -116,11 +106,12 @@ class JumpAssignment(models.Model):
         return f"Задание для {self.parachutist} в {self.jump_group}"
 
 
-# 8. PreJumpCheck (Проверка перед прыжком)
-class PreJumpCheck(models.Model):
-    pre_jump_check_id = models.AutoField(primary_key=True)
+# 7. парашютист в прыжковой группе
+class JumpGroupParachutist(models.Model):
+    parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
-    parachutist = models.ForeignKey('Parachutist', on_delete=models.CASCADE)  # Добавляем связь с моделью Parachutist
+    request_status = models.CharField(max_length=50, choices=[('Pending', 'Ожидает'), ('Approved', 'Одобрена'),
+                                                              ('Denied', 'Отклонена')], default='Pending')
     theory_passed = models.BooleanField(default=False)
     practice_passed = models.BooleanField(default=False)
     medical_certified = models.BooleanField(default=False)
@@ -128,4 +119,4 @@ class PreJumpCheck(models.Model):
     correct_assignment = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Проверка перед прыжком для {self.jump_group} парашютиста {self.parachutist} ({'Пройдено' if self.theory_passed else 'Не пройдено'})"
+        return f"Заявка на прыжок {self.parachutist} в {self.jump_group} ({self.request_status})"

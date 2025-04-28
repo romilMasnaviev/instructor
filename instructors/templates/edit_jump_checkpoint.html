@@ -1,0 +1,49 @@
+<!-- templates/edit_jump_checkpoint.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование чекпоинтов</title>
+</head>
+<body>
+    <h1>Редактирование чекпоинтов для {{ parachutist_group.parachutist.first_name }} {{ parachutist_group.parachutist.last_name }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label>
+            Теория:
+            <input type="checkbox" name="theory_passed" {% if parachutist_group.theory_passed %}checked{% endif %}>
+        </label><br>
+
+        <label>
+            Практика:
+            <input type="checkbox" name="practice_passed" {% if parachutist_group.practice_passed %}checked{% endif %}>
+        </label><br>
+
+        <label>
+            Медицинская сертификация:
+            <input type="checkbox" name="medical_certified" {% if parachutist_group.medical_certified %}checked{% endif %}>
+        </label><br>
+
+        <label>
+            Проверка снаряжения:
+            <input type="checkbox" name="equipment_checked" {% if parachutist_group.equipment_checked %}checked{% endif %}>
+        </label><br>
+
+        <label>
+            Корректное задание:
+            <input type="checkbox" name="correct_assignment" {% if parachutist_group.correct_assignment %}checked{% endif %}>
+        </label><br>
+
+        {% if jump_group.status == 'Pre-Flight Preparation' %}
+            <button type="submit">Сохранить изменения</button>
+        {% else %}
+            <p>Редактирование чекпоинтов доступно только на этапе подготовки к прыжку.</p>
+        {% endif %}
+    </form>
+
+    <p><a href="{% url 'jump_group_detail' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}">← Назад к прыжковой группе</a></p>
+</body>
+</html>
+{#TODO добавить описание полетного задания#}

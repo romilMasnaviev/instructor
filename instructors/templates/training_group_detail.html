@@ -1,4 +1,3 @@
-<!-- templates/training_group_detail.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -22,6 +21,15 @@
         .failed {
             color: red;
             font-weight: bold;
+        }
+
+        .parachutist-name {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .parachutist-name:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -50,23 +58,28 @@
     <ul>
         {% for gp in group_parachutists %}
             <li>
-                <strong>{{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}</strong>
+                <strong>
+                    <!-- Ссылка на фамилию парашютиста -->
+                    <a href="{% url 'edit_training_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}" class="parachutist-name">
+                        {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
+                    </a>
+                </strong>
                 <ul>
                     <li>Теория: <span class="{% if gp.theory_passed %}passed{% else %}failed{% endif %}">
-                    {% if gp.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
-                </span></li>
+                        {% if gp.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
                     <li>Практика: <span class="{% if gp.practice_passed %}passed{% else %}failed{% endif %}">
-                    {% if gp.practice_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
-                </span></li>
+                        {% if gp.practice_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
                     <li>Экзамен: <span class="{% if gp.exam_passed %}passed{% else %}failed{% endif %}">
-                    {% if gp.exam_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
-                </span></li>
+                        {% if gp.exam_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
                     <li>Готов к прыжку: <span class="{% if gp.ready_for_jump %}passed{% else %}failed{% endif %}">
-                    {% if gp.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}
-                </span></li>
-                    {% if training_group.status == 'in_progress' %}
+                        {% if gp.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}
+                    </span></li>
+                    {% if training_group.status == 'Created' %}
                         <li>
-                            <a href="{% url 'edit_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}">
+                            <a href="{% url 'edit_training_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}">
                                 Редактировать чекпоинты
                             </a>
                         </li>

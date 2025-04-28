@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Выставить оценку за прыжок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        .score-option {
+            margin-right: 10px;
+        }
+
+        .form-container {
+            margin-top: 20px;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Выставить оценку за прыжок</h1>
+
+<p><strong>Парашютист:</strong> {{ parachutist.first_name }} {{ parachutist.last_name }}</p>
+<p><strong>Прыжковая группа:</strong> {{ jump_group.id }} - {{ jump_group.get_status_display }}</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="form-container">
+        <label for="score">Оценка:</label><br>
+        <input type="radio" name="score" value="0" class="score-option" {% if jump_assignment.score == 0 %}checked{% endif %}> 0
+        <input type="radio" name="score" value="1" class="score-option" {% if jump_assignment.score == 1 %}checked{% endif %}> 1
+        <input type="radio" name="score" value="2" class="score-option" {% if jump_assignment.score == 2 %}checked{% endif %}> 2
+        <input type="radio" name="score" value="3" class="score-option" {% if jump_assignment.score == 3 %}checked{% endif %}> 3
+        <input type="radio" name="score" value="4" class="score-option" {% if jump_assignment.score == 4 %}checked{% endif %}> 4
+        <input type="radio" name="score" value="5" class="score-option" {% if jump_assignment.score == 5 %}checked{% endif %}> 5
+    </div>
+
+    <button type="submit">Сохранить оценку</button>
+</form>
+
+<a href="{% url 'jump_group_detail' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}">← Назад к прыжковой группе</a>
+
+</body>
+</html>
