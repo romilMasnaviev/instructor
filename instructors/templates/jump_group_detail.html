@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Прыжковая группа {{ jump_group.id }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        .passed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .failed {
+            color: red;
+            font-weight: bold;
+        }
+
+        .not-assigned {
+            color: orange;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h1>Прыжковая группа</h1>
+<p><strong>Инструктор по воздуху:</strong> {{ jump_group.instructor_air.first_name }} {{ jump_group.instructor_air.last_name }}</p>
+<p><strong>Инструктор на земле:</strong> {{ jump_group.instructor_ground.first_name }} {{ jump_group.instructor_ground.last_name }}</p>
+<p><strong>Статус:</strong> {{ jump_group.get_status_display }}</p>
+<p><strong>Дата начала:</strong> {{ jump_group.start_date_time|date:"d.m.Y H:i" }}</p>
+{% if jump_group.end_date_time %}
+    <p><strong>Дата окончания:</strong> {{ jump_group.end_date_time|date:"d.m.Y H:i" }}</p>
+{% endif %}
+
+<!-- Кнопки для изменения статуса группы -->
+{% if jump_group.status == 'Created' %}
+    <a href="{% url 'start_pre_flight_preparation' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}">
+        <button>Начать предполетную подготовку</button>
+    </a>
+{% elif jump_group.status == 'Pre-Flight Preparation' %}
+    <a href="{% url 'complete_pre_flight_preparation' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}">
+        <button>Завершить предполетную подготовку</button>
+    </a>
+{% endif %}
+
+
+<h2>Заявки на прыжок</h2>
+{% if request_data %}
+    <ul>
+        {% for item in request_data %}
+            <li>
+                <strong>{{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}</strong><br>
+                Статус заявки: {{ item.request.get_request_status_display }}<br>
+                {% if item.task %}
+                    Задание: {{ item.task }}
+                {% else %}
+                    Задание: <em>не назначено</em>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Пока нет заявок на прыжок в этой группе.</p>
+{% endif %}
+
+<h2>Парашютисты и их предполетная подготовка</h2>
+{% if pre_jump_checks %}
+    <ul>
+        {% for check in pre_jump_checks %}
+            <li>
+                <strong>{{ check.parachutist.first_name }} {{ check.parachutist.last_name }}</strong>
+                <ul>
+                    <li>Теория: <span class="{% if check.theory_passed %}passed{% else %}failed{% endif %}">
+                        {% if check.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
+                    <li>Практика: <span class="{% if check.practice_passed %}passed{% else %}failed{% endif %}">
+                        {% if check.practice_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
+                    <li>Медицинская сертификация: <span class="{% if check.medical_certified %}passed{% else %}failed{% endif %}">
+                        {% if check.medical_certified %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
+                    <li>Проверка снаряжения: <span class="{% if check.equipment_checked %}passed{% else %}failed{% endif %}">
+                        {% if check.equipment_checked %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                    </span></li>
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Нет данных о предполетной подготовке для парашютистов в этой группе.</p>
+{% endif %}
+
+<p><a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}">← Назад к расписанию</a></p>
+</body>
+</html>

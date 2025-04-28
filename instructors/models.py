@@ -71,14 +71,26 @@ class TrainingGroupParachutist(models.Model):
 class JumpGroup(models.Model):
     instructor_air = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='air_instructor')
     instructor_ground = models.ForeignKey(Instructor, on_delete=models.CASCADE, related_name='ground_instructor')
+    group_name = models.CharField(max_length=255, default="")  # <--- новое поле: название группы
+    start_date_time = models.DateTimeField(null=True, blank=True)  # <--- новое поле: начало
+    end_date_time = models.DateTimeField(null=True, blank=True)  # <--- новое поле: завершение
     jump_date = models.DateTimeField()
     aircraft_type = models.CharField(max_length=255)
     altitude = models.PositiveIntegerField(help_text="Высота в метрах")
-    status = models.CharField(max_length=50, choices=[('Created', 'Создана'),('Progress', 'В процессе'),('Jump', 'Выполнение прыжка'), ('Completed', 'Завершен'),
-                                                      ('Cancelled', 'Отменен')], default='Created')
+    status = models.CharField(
+        max_length=50,
+        choices=[
+            ('Created', 'Создана'),
+            ('Pre-Flight Preparation', 'Предполетная подготовка'),
+            ('Jump In Progress', 'Прыжок в процессе'),
+            ('Completed', 'Завершена'),
+            ('Cancelled', 'Отменена')
+        ],
+        default='Created'
+    )
 
     def __str__(self):
-        return f"Прыжковая группа {self.jump_date} ({self.status})"
+        return f"Прыжковая группа {self.group_name} ({self.status})"
 
 
 # 6. JumpRequest (Заявка на прыжок)
@@ -113,6 +125,7 @@ class PreJumpCheck(models.Model):
     practice_passed = models.BooleanField(default=False)
     medical_certified = models.BooleanField(default=False)
     equipment_checked = models.BooleanField(default=False)
+    correct_assignment = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Проверка перед прыжком для {self.jump_group} парашютиста {self.parachutist} ({'Пройдено' if self.theory_passed else 'Не пройдено'})"

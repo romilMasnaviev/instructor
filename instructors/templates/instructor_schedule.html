@@ -62,10 +62,15 @@
         <ul>
             {% for jump in jump_groups %}
                 <li>
-                    Дата прыжка: {{ jump.jump_date|date:"d.m.Y H:i" }}<br>
-                    Самолет: {{ jump.aircraft_type }}<br>
-                    Высота: {{ jump.altitude }} м<br>
-                    Статус: {{ jump.get_status_display }}
+                    <a href="{% url 'jump_group_detail' instructor_id=instructor.instructor_id jump_group_id=jump.id %}">
+                        <strong>{{ jump.group_name }}</strong>
+                    </a><br>
+                    Статус: {{ jump.get_status_display }}<br>
+                    Начало: {% if jump.start_date_time %}{{ jump.start_date_time|date:"d.m.Y H:i" }}{% else %}Не
+                    указано{% endif %}<br>
+                    {% if jump.end_date_time %}
+                        Завершение: {{ jump.end_date_time|date:"d.m.Y H:i" }}
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -73,5 +78,6 @@
         <p>Нет назначенных прыжковых групп.</p>
     {% endif %}
 </div>
+
 </body>
 </html>

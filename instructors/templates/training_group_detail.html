@@ -23,12 +23,6 @@
             color: red;
             font-weight: bold;
         }
-
-        .parachutist-name {
-            color: #007bff;
-            cursor: pointer;
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
@@ -56,16 +50,7 @@
     <ul>
         {% for gp in group_parachutists %}
             <li>
-                <strong>
-                    <!-- Кликабельное ФИО парашютиста -->
-                    {% if training_group.status == 'in_progress' %}
-                        <a href="{% url 'edit_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}" class="parachutist-name">
-                            {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
-                        </a>
-                    {% else %}
-                        {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
-                    {% endif %}
-                </strong>
+                <strong>{{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}</strong>
                 <ul>
                     <li>Теория: <span class="{% if gp.theory_passed %}passed{% else %}failed{% endif %}">
                     {% if gp.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
@@ -79,6 +64,13 @@
                     <li>Готов к прыжку: <span class="{% if gp.ready_for_jump %}passed{% else %}failed{% endif %}">
                     {% if gp.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}
                 </span></li>
+                    {% if training_group.status == 'in_progress' %}
+                        <li>
+                            <a href="{% url 'edit_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}">
+                                Редактировать чекпоинты
+                            </a>
+                        </li>
+                    {% endif %}
                 </ul>
             </li>
         {% endfor %}

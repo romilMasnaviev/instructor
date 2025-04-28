@@ -1,10 +1,12 @@
 # views.py
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import TrainingGroup, JumpGroup, Instructor, TrainingGroupParachutist
 from django.db.models import Q
 from django.http import HttpResponseForbidden
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import TrainingGroupParachutist, TrainingGroup, Instructor
+from django.shortcuts import redirect
+from django.shortcuts import render, get_object_or_404
+
+from .models import JumpGroup, Instructor, JumpRequest, JumpAssignment, PreJumpCheck
+from .models import TrainingGroupParachutist, TrainingGroup
+
 
 # Инструктор получает расписание
 def instructor_schedule(request, instructor_id):
@@ -26,6 +28,7 @@ def instructor_schedule(request, instructor_id):
 
     return render(request, 'instructor_schedule.html', context)
 
+
 # Инструктор получает учебную группу
 def training_group_detail(request, instructor_id, training_group_id):
     instructor = get_object_or_404(Instructor, pk=instructor_id)
@@ -42,6 +45,7 @@ def training_group_detail(request, instructor_id, training_group_id):
 
     return render(request, 'training_group_detail.html', context)
 
+
 # Инструктор начинает обучение учебной группы
 def start_training(request, instructor_id, training_group_id):
     instructor = get_object_or_404(Instructor, pk=instructor_id)
@@ -55,6 +59,7 @@ def start_training(request, instructor_id, training_group_id):
 
     return redirect('training_group_detail', instructor_id=instructor_id, training_group_id=training_group_id)
 
+
 # Инструктор заканчивает обучение учебной группы
 def complete_training(request, instructor_id, training_group_id):
     instructor = get_object_or_404(Instructor, pk=instructor_id)
@@ -67,6 +72,7 @@ def complete_training(request, instructor_id, training_group_id):
     training_group.save()
 
     return redirect('training_group_detail', instructor_id=instructor_id, training_group_id=training_group_id)
+
 
 # Инструктор изменяет чекпоинты парашютиста в учебной группе
 def edit_checkpoint(request, instructor_id, training_group_id, parachutist_id):
@@ -95,3 +101,73 @@ def edit_checkpoint(request, instructor_id, training_group_id, parachutist_id):
         'training_group': training_group,
         'instructor': instructor,
     })
+
+
+# Инструктор получает прыжковую группу
+def jump_group_detail(request, instructor_id, jump_group_id):
+    instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
+    jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
+
+    # Все заявки для этой прыжковой группы
+    jump_requests = JumpRequest.objects.filter(jump_group=jump_group)
+
+    # Для каждой заявки найдем задание (если есть)
+    request_data = []
+    for req in jump_requests:
+        # Пытаемся найти задание для этого парашютиста и прыжковой группы
+        assignment = JumpAssignment.objects.filter(parachutist=req.parachutist, jump_group=jump_group).first()
+        task = assignment.task if assignment else None
+
+        request_data.append({
+            'request': req,
+            'task': task
+        })
+
+    # Получаем все проверки перед прыжком для парашютистов в этой группе
+    pre_jump_checks = PreJumpCheck.objects.filter(jump_group=jump_group)
+
+    return render(request, 'jump_group_detail.html', {
+        'instructor': instructor,
+        'jump_group': jump_group,
+        'request_data': request_data,
+        'pre_jump_checks': pre_jump_checks,  # Передаем информацию о предполетной подготовке
+    })
+
+
+# Инструктор начинает предполетную подготовку
+def start_pre_flight_preparation(request, instructor_id, jump_group_id):
+    jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
+
+    # Изменение статуса группы
+    jump_group.status = 'Pre-Flight Preparation'
+    jump_group.save()
+
+    # Получаем все заявки на прыжок, которые относятся к данной прыжковой группе
+    jump_requests = JumpRequest.objects.filter(jump_group=jump_group)
+
+    # Для каждой заявки создаем объект PreJumpCheck
+    for jump_request in jump_requests:
+        parachutist = jump_request.parachutist  # Получаем парашютиста из заявки
+
+        # Создаем новый объект PreJumpCheck для каждого парашютиста
+        PreJumpCheck.objects.create(
+            jump_group=jump_group,
+            parachutist=parachutist,
+            theory_passed=False,
+            practice_passed=False,
+            medical_certified=False,
+            equipment_checked=False
+        )
+
+    return redirect('jump_group_detail', instructor_id=instructor_id, jump_group_id=jump_group_id)
+
+
+# Инструктор заканчивает предполетную подготовку
+def complete_pre_flight_preparation(request, instructor_id, jump_group_id):
+    jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
+
+    # Изменение статуса группы
+    jump_group.status = 'Jump In Progress'
+    jump_group.save()
+
+    return redirect('jump_group_detail', instructor_id=instructor_id, jump_group_id=jump_group_id)
