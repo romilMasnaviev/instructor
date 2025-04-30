@@ -1,10 +1,8 @@
 # views.py
 from django.db.models import Q
-from django.http import HttpResponseForbidden
-from django.shortcuts import redirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 
-from .models import JumpGroup, Instructor, JumpAssignment, JumpGroupParachutist, Parachutist
+from .models import Instructor, JumpGroupParachutist, Parachutist
 from .models import TrainingGroupParachutist, TrainingGroup
 
 
@@ -132,6 +130,7 @@ def jump_group_detail(request, instructor_id, jump_group_id):
         'request_data': request_data,
     })
 
+
 # Инструктор начинает предполетную подготовку
 def start_pre_flight_preparation(request, instructor_id, jump_group_id):
     jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
@@ -254,3 +253,11 @@ def set_jump_score(request, instructor_id, jump_group_id, parachutist_id):
         'jump_assignment': jump_assignment,
         'instructor': instructor  # Передаем объект инструктора в контекст
     })
+
+# TODO добавить завершение прыжковой группы
+# TODO добавить что нельзя завершить учебную группу, пока всем парашютистам со
+#  статусом Approved не выставлены оценки
+
+
+# TODO Добавить отображение заданий для парашютиста
+#  в прыжковой группе для корректной проверки правильности задания
