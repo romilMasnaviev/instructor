@@ -2,132 +2,346 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Прыжковая группа {{ jump_group.id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #e74c3c;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        .bg-success {
+            background-color: #2ecc71 !important;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        .group-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .group-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-left: 1rem;
+        }
+        
+        .group-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 4px;
+        }
+        
+        .info-badge {
+            font-size: 0.9rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 50px;
+        }
+        
+        .parachutist-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .parachutist-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .parachutist-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .parachutist-name:hover {
+            color: var(--secondary);
         }
 
-        h1, h2 {
-            color: #333;
+        .request-status {
+            font-size: 0.85rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: #f0f0f0;
+            display: inline-block;
+            margin-bottom: 0.5rem;
         }
-
+        
+        .checkpoint-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .checkpoint-icon {
+            margin-right: 0.8rem;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
         .passed {
-            color: green;
-            font-weight: bold;
+            color: var(--success);
+            font-weight: 500;
         }
-
+        
         .failed {
-            color: red;
-            font-weight: bold;
+            color: var(--danger);
+            font-weight: 500;
         }
-
+        
         .not-assigned {
             color: orange;
-            font-weight: bold;
+            font-weight: 500;
+        }
+        
+        .btn-action {
+            border: none;
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-start {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-complete {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-edit {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-back {
+            color: var(--dark);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-back:hover {
+            color: var(--secondary);
+        }
+        
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.35rem 0.7rem;
+        }
+        
+        .task-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
+    <div class="container py-4">
+        <div class="group-header">
+            <h1 class="group-title">Прыжковая группа #{{ jump_group.id }}</h1>
+            
+            <div class="d-flex flex-wrap align-items-center mb-3">
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Инструктор по воздуху:</span>
+                    <span class="fw-bold ms-2">{{ jump_group.instructor_air.first_name }} {{ jump_group.instructor_air.last_name }}</span>
+                </div>
+                
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Инструктор на земле:</span>
+                    <span class="fw-bold ms-2">{{ jump_group.instructor_ground.first_name }} {{ jump_group.instructor_ground.last_name }}</span>
+                </div>
+                
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Статус:</span>
+                    <span class="info-badge bg-{% if jump_group.status == 'completed' %}success text-white fw-semibold{% elif jump_group.status == 'Jump In Progress' %}warning fw-semibold{% else %}info text-white fw-semibold{% endif %}">
+                        {{ jump_group.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Начало:</span>
+                    <span class="fw-bold ms-2">{{ jump_group.start_date_time|date:"d.m.Y H:i" }}</span>
+                </div>
+                
+                {% if jump_group.end_date_time %}
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Окончание:</span>
+                    <span class="fw-bold ms-2">{{ jump_group.end_date_time|date:"d.m.Y H:i" }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Кнопки для изменения статуса группы -->
+            <div class="d-flex flex-wrap">
+                {% if jump_group.status == 'created' %}
+                    <a href="{% url 'start_pre_flight_preparation' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}" class="btn btn-action btn-start">
+                        <i class="bi bi-play-fill me-1"></i> Начать предполетную подготовку
+                    </a>
+                {% elif jump_group.status == 'Pre-Flight Preparation' %}
+                    <a href="{% url 'complete_pre_flight_preparation' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}" class="btn btn-action btn-complete">
+                        <i class="bi bi-check-circle-fill me-1"></i> Завершить предполетную подготовку
+                    </a>
+                {% elif jump_group.status == 'Jump In Progress' %}
+                    <p class="text-muted">Для каждого парашютиста необходимо выставить оценку за прыжок.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0" style="font-size: 1.5rem; font-weight: 600;">Парашютисты</h2>
+            <span class="badge bg-primary rounded-pill">{{ request_data|length }}</span>
+        </div>
+        
+        {% if request_data %}
+            <div class="row">
+                {% for item in request_data %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="parachutist-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            {% if jump_group.status == 'Pre-Flight Preparation' %}
+                                <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
+                                   class="parachutist-name">
+                                    {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
+                                </a>
+                                <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
+                                   class="btn btn-sm btn-edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            {% else %}
+                                <span class="parachutist-name">
+                                    {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
+                                </span>
+                            {% endif %}
+                        </div>
 
-<h1>Прыжковая группа</h1>
-
-<p><strong>Инструктор по
-    воздуху:</strong> {{ jump_group.instructor_air.first_name }} {{ jump_group.instructor_air.last_name }}</p>
-<p><strong>Инструктор на
-    земле:</strong> {{ jump_group.instructor_ground.first_name }} {{ jump_group.instructor_ground.last_name }}</p>
-<p><strong>Статус:</strong> {{ jump_group.get_status_display }}</p>
-<p><strong>Дата начала:</strong> {{ jump_group.start_date_time|date:"d.m.Y H:i" }}</p>
-{% if jump_group.end_date_time %}
-    <p><strong>Дата окончания:</strong> {{ jump_group.end_date_time|date:"d.m.Y H:i" }}</p>
-{% endif %}
-
-<!-- Кнопки для изменения статуса группы -->
-{% if jump_group.status == 'created' %}
-    <a href="{% url 'start_pre_flight_preparation' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}">
-        <button>Начать предполетную подготовку</button>
-    </a>
-{% elif jump_group.status == 'Pre-Flight Preparation' %}
-    <a href="{% url 'complete_pre_flight_preparation' instructor_id=instructor.instructor_id jump_group_id=jump_group.id %}">
-        <button>Завершить предполетную подготовку</button>
-    </a>
-{% elif jump_group.status == 'Jump In Progress' %}
-    <!-- Если группа в процессе, показываем кнопку для выставления оценки -->
-    <p>Для каждого парашютиста необходимо выставить оценку за прыжок.</p>
-{% endif %}
-
-<h2>Парашютисты в группе</h2>
-
-{% if request_data %}
-    <ul>
-        {% for item in request_data %}
-            <li>
-                <strong>
-                    {% if jump_group.status == 'Pre-Flight Preparation' %}
-                        <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}">
-                            {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
-                        </a>
-                    {% elif jump_group.status == 'Jump In Progress' %}
-                        <!-- Для статуса "Jump In Progress" просто выводим имя без ссылки -->
-                        {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
-                    {% else %}
-                        {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
-                    {% endif %}
-
-                </strong>
-                <ul>
-                    <li>Статус заявки: {{ item.request.get_request_status_display }}</li>
-                    <li>Задание:
-                        {% if item.task %}
-                            {{ item.task }}
-                        {% else %}
-                            <span class="not-assigned">не назначено</span>
-                        {% endif %}
-                    </li>
-
-                    <!-- Если группа не в статусе "Jump In Progress", показываем все чекпоинты -->
-                    {% if jump_group.status != 'Jump In Progress' %}
-                        <li>Теория:
+                        <div class="request-status mb-2">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            Статус заявки: {{ item.request.get_request_status_display }}
+                        </div>
+                        
+                        <div class="task-item mb-3">
+                            <strong>Задание:</strong> 
+                            {% if item.task %}
+                                {{ item.task }}
+                            {% else %}
+                                <span class="not-assigned">не назначено</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+                            <div class="flex-grow-1">Теория</div>
                             <span class="{% if item.request.theory_passed %}passed{% else %}failed{% endif %}">
-                                {% if item.request.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                                {% if item.request.theory_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
                             </span>
-                        </li>
-                        <li>Практика:
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div class="flex-grow-1">Практика</div>
                             <span class="{% if item.request.practice_passed %}passed{% else %}failed{% endif %}">
-                                {% if item.request.practice_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                                {% if item.request.practice_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
                             </span>
-                        </li>
-                        <li>Медицинская сертификация:
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-heart-pulse"></i>
+                            </div>
+                            <div class="flex-grow-1">Мед. сертификация</div>
                             <span class="{% if item.request.medical_certified %}passed{% else %}failed{% endif %}">
-                                {% if item.request.medical_certified %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                                {% if item.request.medical_certified %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
                             </span>
-                        </li>
-                        <li>Проверка снаряжения:
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <div class="flex-grow-1">Снаряжение</div>
                             <span class="{% if item.request.equipment_checked %}passed{% else %}failed{% endif %}">
-                                {% if item.request.equipment_checked %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
+                                {% if item.request.equipment_checked %}<i class="bi bi-check-circle-fill"></i> Проверено{% else %}<i class="bi bi-x-circle-fill"></i> Не проверено{% endif %}
                             </span>
-                        </li>
-                        <li>Корректное задание:
+                        </div>
+                        
+                        <div class="checkpoint-item" style="border-bottom: none;">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-check2-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">Корректное задание</div>
                             <span class="{% if item.request.correct_assignment %}passed{% else %}failed{% endif %}">
-                                {% if item.request.correct_assignment %}✔ Назначено{% else %}✖ Ошибка{% endif %}
+                                {% if item.request.correct_assignment %}<i class="bi bi-check-circle-fill"></i> Да{% else %}<i class="bi bi-x-circle-fill"></i> Нет{% endif %}
                             </span>
-                        </li>
-                    {% else %}
-                        <!-- В случае статуса "Jump In Progress", показываем ссылку -->
-                        <li>
-                            <a href="{% url 'set_jump_score' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}">Выставить
-                                оценку за прыжок</a></li>
-                    {% endif %}
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>Пока нет парашютистов в этой группе.</p>
-{% endif %}
+                        </div>
+                        
+                        {% if jump_group.status == 'Jump In Progress' %}
+                        <div class="mt-3">
+                            <a href="{% url 'set_jump_score' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
+                               class="btn btn-action btn-edit w-100">
+                                <i class="bi bi-star-fill me-1"></i> Выставить оценку
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                В этой группе пока нет парашютистов.
+            </div>
+        {% endif %}
+        
+        <a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}" class="btn-back">
+            <i class="bi bi-arrow-left me-2"></i> Назад к расписанию
+        </a>
+    </div>
 
-<p><a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}">← Назад к расписанию</a></p>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
