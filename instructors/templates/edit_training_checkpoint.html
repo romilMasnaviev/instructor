@@ -3,36 +3,372 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Редактирование чекпоинтов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --primary-light: #ebf5fb;
+            --secondary: #e74c3c;
+            --success: #2ecc71;
+            --success-light: #e8f8f0;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+            --light: #f8f9fa;
+        }
+        
+        body {
+            background-color: #f0f5f9;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(52, 152, 219, 0.08) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(46, 204, 113, 0.08) 0%, transparent 20%),
+                linear-gradient(to bottom, #f0f5f9, #e6f0f5);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%233498db" opacity="0.1"><path d="M12 3L2 12l3 3 7-7 7 7 3-3L12 3zm0 18l-3-3 7-7 7 7-3 3-7-7-7 7z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: -1;
+        }
+        
+        body::after {
+            content: "";
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 150px;
+            height: 150px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%232ecc71" opacity="0.1"><path d="M12 3L2 12l3 3 7-7 7 7 3-3L12 3zm0 18l-3-3 7-7 7 7-3 3-7-7-7 7z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: -1;
+        }
+        
+        .checkpoint-container {
+            max-width: 550px;
+            margin: 0 auto;
+        }
+        
+        .checkpoint-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 
+                0 5px 20px rgba(0,0,0,0.08),
+                0 0 0 1px rgba(0,0,0,0.03);
+            position: relative;
+            overflow: hidden;
+            border: none;
+            backdrop-filter: blur(2px);
+        }
+        
+        .checkpoint-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--success));
+        }
+        
+        .checkpoint-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .checkpoint-header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--primary);
+        }
+        
+        .checkpoint-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .parachutist-info {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .parachutist-name {
+            font-weight: 500;
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 5px 15px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .parachutist-name::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(52,152,219,0.1) 0%, rgba(52,152,219,0.05) 100%);
+            z-index: -1;
+        }
+        
+        .parachutist-name i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+        
+        .checkpoint-list {
+            margin: 25px 0;
+        }
+        
+        .checkpoint-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background: var(--light);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .checkpoint-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-color: var(--primary-light);
+        }
+        
+        .checkpoint-icon {
+            color: var(--primary);
+            font-size: 1.3rem;
+            width: 30px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .checkpoint-label {
+            flex-grow: 1;
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .form-check-input {
+            width: 1.3em;
+            height: 1.3em;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--success);
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+        }
+        
+        .status-container {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 25px 0;
+            display: flex;
+            align-items: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .status-container:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .status-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        
+        .status-text {
+            font-weight: 500;
+            margin-right: 10px;
+        }
+        
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .status-ready {
+            background: var(--success-light);
+            color: #27ae60;
+        }
+        
+        .status-not-ready {
+            background: #fdecea;
+            color: var(--secondary);
+        }
+        
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn-save:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(41, 128, 185, 0.3);
+        }
+        
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            color: var(--gray);
+            text-decoration: none;
+            margin-top: 25px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            padding: 8px 15px;
+            border-radius: 6px;
+        }
+        
+        .btn-back:hover {
+            color: var(--primary);
+            background: rgba(52, 152, 219, 0.1);
+        }
+        
+        @media (max-width: 576px) {
+            body {
+                padding: 15px;
+            }
+            
+            .checkpoint-card {
+                padding: 20px;
+            }
+            
+            .checkpoint-title {
+                font-size: 1.4rem;
+            }
+            
+            .parachutist-name {
+                font-size: 1rem;
+                padding: 4px 12px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Редактирование чекпоинтов для {{ parachutist_group.parachutist.first_name }} {{ parachutist_group.parachutist.last_name }}</h1>
+    <div class="checkpoint-container">
+        <div class="checkpoint-card">
+            <div class="checkpoint-header">
+                <div class="d-flex align-items-center mb-3">
+                    <div>
+                        <h1 class="checkpoint-title mb-1">Редактирование чекпоинтов</h1>
+                        <div class="parachutist-info">
+                            <span class="text-muted me-2">Для парашютиста:</span>
+                            <span class="parachutist-name">
+                                <i class="bi bi-person"></i>
+                                {{ parachutist_group.parachutist.first_name }} {{ parachutist_group.parachutist.last_name }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="checkpoint-list">
+                    <div class="checkpoint-item">
+                        <i class="bi bi-journal-text checkpoint-icon"></i>
+                        <label class="checkpoint-label">Теория</label>
+                        <input class="form-check-input" type="checkbox" name="theory_passed" 
+                               {% if parachutist_group.theory_passed %}checked{% endif %}>
+                    </div>
+                    
+                    <div class="checkpoint-item">
+                        <i class="bi bi-gear checkpoint-icon"></i>
+                        <label class="checkpoint-label">Практика</label>
+                        <input class="form-check-input" type="checkbox" name="practice_passed" 
+                               {% if parachutist_group.practice_passed %}checked{% endif %}>
+                    </div>
+                    
+                    <div class="checkpoint-item">
+                        <i class="bi bi-clipboard-check checkpoint-icon"></i>
+                        <label class="checkpoint-label">Экзамен</label>
+                        <input class="form-check-input" type="checkbox" name="exam_passed" 
+                               {% if parachutist_group.exam_passed %}checked{% endif %}>
+                    </div>
+                </div>
+                
+                <div class="status-container">
+                    <i class="bi bi-parachute status-icon"></i>
+                    <span class="status-text">Готов к прыжку:</span>
+                    <span class="status-badge {% if parachutist_group.ready_for_jump %}status-ready{% else %}status-not-ready{% endif %}">
+                        {% if parachutist_group.ready_for_jump %}
+                            <i class="bi bi-check-circle-fill me-1"></i> Да
+                        {% else %}
+                            <i class="bi bi-x-circle-fill me-1"></i> Нет
+                        {% endif %}
+                    </span>
+                </div>
+                
+                {% if training_group.status == 'in_progress' %}
+                    <button type="submit" class="btn-save">
+                        <i class="bi bi-save me-2"></i> Сохранить изменения
+                    </button>
+                {% endif %}
+            </form>
+            
+            <a href="{% url 'training_group_detail' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}" class="btn-back">
+                <i class="bi bi-arrow-left me-2"></i> Назад к учебной группе
+            </a>
+        </div>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
-
-        <label>
-            Теория:
-            <input type="checkbox" name="theory_passed" {% if parachutist_group.theory_passed %}checked{% endif %}>
-        </label><br>
-
-        <label>
-            Практика:
-            <input type="checkbox" name="practice_passed" {% if parachutist_group.practice_passed %}checked{% endif %}>
-        </label><br>
-
-        <label>
-            Экзамен:
-            <input type="checkbox" name="exam_passed" {% if parachutist_group.exam_passed %}checked{% endif %}>
-        </label><br>
-
-        <p>Готов к прыжку: {% if parachutist_group.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}</p>
-
-        {% if training_group.status == 'in_progress' %}
-            <button type="submit">Сохранить изменения</button>
-        {% endif %}
-    </form>
-
-    <p><a href="{% url 'training_group_detail' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}">← Назад к учебной группе</a></p>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
