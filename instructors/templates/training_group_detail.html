@@ -2,96 +2,280 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ training_group.group_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #e74c3c;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        .bg-success {
+            background-color: #2ecc71 !important;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
-
-        h1, h2 {
-            color: #333;
+        
+        .group-header {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-
-        .passed {
-            color: green;
-            font-weight: bold;
+        
+        .group-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-left: 1rem;
         }
-
-        .failed {
-            color: red;
-            font-weight: bold;
+        
+        .group-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 4px;
         }
-
+        
+        .info-badge {
+            font-size: 0.9rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 50px;
+        }
+        
+        .parachutist-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .parachutist-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
         .parachutist-name {
-            color: #007bff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
             text-decoration: none;
+            transition: all 0.2s ease;
         }
-
+        
         .parachutist-name:hover {
-            text-decoration: underline;
+            color: var(--secondary);
+        }
+        
+        .checkpoint-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .checkpoint-icon {
+            margin-right: 0.8rem;
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .passed {
+            color: var(--success);
+            font-weight: 500;
+        }
+        
+        .failed {
+            color: var(--danger);
+            font-weight: 500;
+        }
+        
+        .btn-action {
+            border: none;
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-start {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-complete {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        .btn-edit {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-back {
+            color: var(--dark);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-back:hover {
+            color: var(--secondary);
+        }
+        
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.35rem 0.7rem;
         }
     </style>
 </head>
 <body>
-<h1>Учебная группа: {{ training_group.group_name }}</h1>
-<p><strong>Инструктор:</strong> {{ instructor.first_name }} {{ instructor.last_name }}</p>
-<p><strong>Статус:</strong> {{ training_group.get_status_display }}</p>
-<p><strong>Дата начала:</strong> {{ training_group.start_date_time|date:"d.m.Y H:i" }}</p>
-{% if training_group.end_date_time %}
-    <p><strong>Дата окончания:</strong> {{ training_group.end_date_time|date:"d.m.Y H:i" }}</p>
-{% endif %}
-
-<!-- Кнопки для изменения статуса группы -->
-{% if training_group.status == 'created' %}
-    <a href="{% url 'start_training' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}">
-        <button>Начать обучение</button>
-    </a>
-{% elif training_group.status == 'in_progress' %}
-    <a href="{% url 'complete_training' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}">
-        <button>Завершить обучение</button>
-    </a>
-{% endif %}
-
-<h2>Парашютисты</h2>
-{% if group_parachutists %}
-    <ul>
-        {% for gp in group_parachutists %}
-            <li>
-                <strong>
-                    <!-- Ссылка на фамилию парашютиста -->
-                    <a href="{% url 'edit_training_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}" class="parachutist-name">
-                        {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
+    <div class="container py-4">
+        <div class="group-header">
+            <h1 class="group-title">Учебная группа: {{ training_group.group_name }}</h1>
+            
+            <div class="d-flex flex-wrap align-items-center mb-3">
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Инструктор:</span>
+                    <span class="fw-bold ms-2">{{ instructor.first_name }} {{ instructor.last_name }}</span>
+                </div>
+                
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Статус:</span>
+                    <span class="info-badge bg-{% if training_group.status == 'completed' %}success text-white fw-semibold{% elif training_group.status == 'in_progress' %}warning fw-semibold{% else %}info text-white fw-semibold{% endif %}">
+                        {{ training_group.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Начало:</span>
+                    <span class="fw-bold ms-2">{{ training_group.start_date_time|date:"d.m.Y H:i" }}</span>
+                </div>
+                
+                {% if training_group.end_date_time %}
+                <div class="me-4 mb-2">
+                    <span class="text-muted">Окончание:</span>
+                    <span class="fw-bold ms-2">{{ training_group.end_date_time|date:"d.m.Y H:i" }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Кнопки для изменения статуса группы -->
+            <div class="d-flex flex-wrap">
+                {% if training_group.status == 'created' %}
+                    <a href="{% url 'start_training' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}" class="btn btn-action btn-start">
+                        <i class="bi bi-play-fill me-1"></i> Начать обучение
                     </a>
-                </strong>
-                <ul>
-                    <li>Теория: <span class="{% if gp.theory_passed %}passed{% else %}failed{% endif %}">
-                        {% if gp.theory_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
-                    </span></li>
-                    <li>Практика: <span class="{% if gp.practice_passed %}passed{% else %}failed{% endif %}">
-                        {% if gp.practice_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
-                    </span></li>
-                    <li>Экзамен: <span class="{% if gp.exam_passed %}passed{% else %}failed{% endif %}">
-                        {% if gp.exam_passed %}✔ Пройдено{% else %}✖ Не пройдено{% endif %}
-                    </span></li>
-                    <li>Готов к прыжку: <span class="{% if gp.ready_for_jump %}passed{% else %}failed{% endif %}">
-                        {% if gp.ready_for_jump %}✔ Да{% else %}✖ Нет{% endif %}
-                    </span></li>
-                    {% if training_group.status == 'Created' %}
-                        <li>
-                            <a href="{% url 'edit_training_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}">
-                                Редактировать чекпоинты
+                {% elif training_group.status == 'in_progress' %}
+                    <a href="{% url 'complete_training' instructor_id=instructor.instructor_id training_group_id=training_group.group_id %}" class="btn btn-action btn-complete">
+                        <i class="bi bi-check-circle-fill me-1"></i> Завершить обучение
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0" style="font-size: 1.5rem; font-weight: 600;">Парашютисты</h2>
+            <span class="badge bg-primary rounded-pill">{{ group_parachutists|length }}</span>
+        </div>
+        
+        {% if group_parachutists %}
+            <div class="row">
+                {% for gp in group_parachutists %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="parachutist-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <a href="{% url 'edit_training_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}" 
+                               class="parachutist-name">
+                                {{ gp.parachutist.first_name }} {{ gp.parachutist.last_name }}
                             </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>В этой группе пока нет парашютистов.</p>
-{% endif %}
+                            {% if training_group.status == 'Created' %}
+                            <a href="{% url 'edit_training_checkpoint' instructor_id=instructor.instructor_id training_group_id=training_group.group_id parachutist_id=gp.parachutist.parachutist_id %}" 
+                               class="btn btn-sm btn-edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-journal-text"></i>
+                            </div>
+                            <div class="flex-grow-1">Теория</div>
+                            <span class="{% if gp.theory_passed %}passed{% else %}failed{% endif %}">
+                                {% if gp.theory_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div class="flex-grow-1">Практика</div>
+                            <span class="{% if gp.practice_passed %}passed{% else %}failed{% endif %}">
+                                {% if gp.practice_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-clipboard-check"></i>
+                            </div>
+                            <div class="flex-grow-1">Экзамен</div>
+                            <span class="{% if gp.exam_passed %}passed{% else %}failed{% endif %}">
+                                {% if gp.exam_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="checkpoint-item" style="border-bottom: none;">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-parachute"></i>
+                            </div>
+                            <div class="flex-grow-1">Готов к прыжку</div>
+                            <span class="{% if gp.ready_for_jump %}passed{% else %}failed{% endif %}">
+                                {% if gp.ready_for_jump %}<i class="bi bi-check-circle-fill"></i> Да{% else %}<i class="bi bi-x-circle-fill"></i> Нет{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info d-flex align-items-center">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                В этой группе пока нет парашютистов.
+            </div>
+        {% endif %}
+        
+        <a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}" class="btn-back">
+            <i class="bi bi-arrow-left me-2"></i> Назад к расписанию
+        </a>
+    </div>
 
-<p><a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}">← Назад к расписанию</a></p>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
