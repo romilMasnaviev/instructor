@@ -164,6 +164,8 @@ def edit_jump_checkpoint(request, instructor_id, jump_group_id, parachutist_id):
 
     # Находим прыжковую группу
     jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
+    parachutist = get_object_or_404(Parachutist, parachutist_id=parachutist_id)
+    jump_assignment = get_object_or_404(JumpAssignment, jump_group=jump_group, parachutist=parachutist)
 
     # Находим инструктора
     instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
@@ -187,6 +189,7 @@ def edit_jump_checkpoint(request, instructor_id, jump_group_id, parachutist_id):
         'parachutist_group': parachutist_group,
         'jump_group': jump_group,
         'instructor': instructor,
+        'jump_assignment': jump_assignment,
     })
 
 
