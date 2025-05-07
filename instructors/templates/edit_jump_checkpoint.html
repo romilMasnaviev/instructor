@@ -327,6 +327,36 @@
                 font-size: 1.4rem;
             }
         }
+        .static-checkpoint {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            cursor: not-allowed;
+        }
+        
+        .static-checkpoint .checkpoint-label {
+            color: #6c757d;
+        }
+        
+        .static-checkpoint .form-check-input {
+            pointer-events: none;
+        }
+        
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.7rem;
+            border-radius: 50px;
+            margin-left: 10px;
+        }
+        
+        .status-passed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -351,25 +381,47 @@
                 {% csrf_token %}
                 
                 <div class="checkpoint-list">
-                    <div class="checkpoint-item">
+                    <div class="checkpoint-item static-checkpoint">
                         <i class="bi bi-journal-text checkpoint-icon"></i>
-                        <label class="checkpoint-label">Теоретическая подготовка</label>
-                        <input class="form-check-input" type="checkbox" name="theory_passed" 
-                               {% if parachutist_group.theory_passed %}checked{% endif %}>
+                        <label class="checkpoint-label">
+                            Теоретическая подготовка
+                            <span class="status-badge status-{% if parachutist_in_training_group.theory_passed %}passed{% else %}failed{% endif %}">
+                                {% if parachutist_in_training_group.theory_passed %}Пройдено{% else %}Не пройдено{% endif %}
+                            </span>
+                        </label>
+                        <input class="form-check-input" type="checkbox" 
+                               {% if parachutist_in_training_group.theory_passed %}checked{% endif %} disabled>
                     </div>
                     
-                    <div class="checkpoint-item">
+                    <div class="checkpoint-item static-checkpoint">
                         <i class="bi bi-gear checkpoint-icon"></i>
-                        <label class="checkpoint-label">Практическая подготовка</label>
-                        <input class="form-check-input" type="checkbox" name="practice_passed" 
-                               {% if parachutist_group.practice_passed %}checked{% endif %}>
+                        <label class="checkpoint-label">
+                            Практическая подготовка
+                            <span class="status-badge status-{% if parachutist_in_training_group.practice_passed %}passed{% else %}failed{% endif %}">
+                                {% if parachutist_in_training_group.practice_passed %}Пройдено{% else %}Не пройдено{% endif %}
+                            </span>
+                        </label>
+                        <input class="form-check-input" type="checkbox" 
+                               {% if parachutist_in_training_group.practice_passed %}checked{% endif %} disabled>
+                    </div>
+                    
+                    <div class="checkpoint-item static-checkpoint">
+                        <i class="bi bi-heart-pulse checkpoint-icon"></i>
+                        <label class="checkpoint-label">
+                            Мед. сертификация
+                        <span class="status-badge status-{% if parachutist_in_training_group.medical_certified %}passed{% else %}failed{% endif %}">
+                            {% if parachutist_in_training_group.medical_certified %}Пройдено{% else %}Не пройдено{% endif %}
+                        </span>
+                        </label>
+                        <input class="form-check-input" type="checkbox" 
+                                {% if parachutist_in_training_group.medical_certified %}checked{% endif %} disabled>
                     </div>
                     
                     <div class="checkpoint-item">
                         <i class="bi bi-heart-pulse checkpoint-icon"></i>
-                        <label class="checkpoint-label">Медицинская сертификация</label>
-                        <input class="form-check-input" type="checkbox" name="medical_certified" 
-                               {% if parachutist_group.medical_certified %}checked{% endif %}>
+                        <label class="checkpoint-label">Медицинское освидетельствование</label>
+                        <input class="form-check-input" type="checkbox" name="medical_checkup_passed" 
+                               {% if parachutist_group.medical_checkup_passed %}checked{% endif %}>
                     </div>
                     
                     <div class="checkpoint-item">

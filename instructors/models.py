@@ -51,10 +51,14 @@ class TrainingGroup(models.Model):
 
 # 4. TrainingGroupParachutist (Обучающийся в группе)
 class TrainingGroupParachutist(models.Model):
-    parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
+    parachutist = models.ForeignKey(Parachutist, unique=True, on_delete=models.CASCADE)
     group = models.ForeignKey(TrainingGroup, on_delete=models.CASCADE)
     theory_passed = models.BooleanField(default=False)
     practice_passed = models.BooleanField(default=False)
+    medical_certified = models.BooleanField('Мед. сертификация', default=False)
+    """
+    Наличие необходимых для прыжка мед. бумаг.
+    """
     exam_passed = models.BooleanField(default=False)  # Новое поле для зачета
     ready_for_jump = models.BooleanField(default=False)  # Новое поле
 
@@ -110,13 +114,14 @@ class JumpAssignment(models.Model):
 class JumpGroupParachutist(models.Model):
     parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     jump_group = models.ForeignKey(JumpGroup, on_delete=models.CASCADE)
-    request_status = models.CharField(max_length=50, choices=[('Pending', 'Ожидает'), ('Approved', 'Одобрена'),
+    request_status = models.CharField('Статус заявки', max_length=50, choices=[('Pending', 'Ожидает'), ('Approved', 'Одобрена'),
                                                               ('Denied', 'Отклонена')], default='Pending')
-    theory_passed = models.BooleanField(default=False)
-    practice_passed = models.BooleanField(default=False)
-    medical_certified = models.BooleanField(default=False)
-    equipment_checked = models.BooleanField(default=False)
-    correct_assignment = models.BooleanField(default=False)
+    medical_checkup_passed = models.BooleanField('Медицинское освидетельствование', default=False)
+    """
+    Проверка состояния здоровья на месте.
+    """
+    equipment_checked = models.BooleanField('Снаряжение проверено', default=False)
+    correct_assignment = models.BooleanField('Корректное задание', default=False)
 
     def __str__(self):
         return f"Заявка на прыжок {self.parachutist} в {self.jump_group} ({self.request_status})"

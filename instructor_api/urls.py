@@ -38,6 +38,10 @@ urlpatterns = [
          views.complete_pre_flight_preparation,
          name='complete_pre_flight_preparation'),
 
+     path('instructors/<int:instructor_id>/jump_groups/<int:jump_group_id>/complete_jump_group/',
+         views.complete_jump_group,
+         name='complete_jump_group'),
+
     path(
         'instructors/<int:instructor_id>/jump_groups/<int:jump_group_id>/parachutists/<int:parachutist_id>/edit_jump_checkpoint/',
         views.edit_jump_checkpoint,
