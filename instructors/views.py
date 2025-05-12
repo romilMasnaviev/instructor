@@ -107,7 +107,6 @@ def jump_group_detail(request, instructor_id, jump_group_id):
     instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
     jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
 
-
     return render(request, 'jump_group_detail.html', {
         'instructor': instructor,
         'jump_group': jump_group,
@@ -147,7 +146,7 @@ def edit_jump_checkpoint(request, instructor_id, jump_group_id, parachutist_id):
     jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
     parachutist = get_object_or_404(Parachutist, parachutist_id=parachutist_id)
     jump_assignment = get_object_or_404(JumpAssignment, jump_group=jump_group, parachutist=parachutist)
-    
+
     # Находим парашютиста в учебной группе
     parachutist_in_training_group = TrainingGroupParachutist.objects.filter(parachutist=parachutist).first()
 
@@ -188,10 +187,12 @@ def complete_pre_flight_preparation(request, instructor_id, jump_group_id):
 
     # Обновляем статус заявок на основе выполнения чекпоинтов
     for parachutist_group in jump_group_parachutists:
-        parachutist_training = TrainingGroupParachutist.objects.filter(parachutist_id=parachutist_group.parachutist.parachutist_id).first()
-        if (parachutist_training.theory_passed and parachutist_training.practice_passed and 
-            parachutist_training.medical_certified and parachutist_group.medical_checkup_passed and 
-            parachutist_group.equipment_checked and parachutist_group.correct_assignment):
+        parachutist_training = TrainingGroupParachutist.objects.filter(
+            parachutist_id=parachutist_group.parachutist.parachutist_id).first()
+        if (parachutist_training.theory_passed and parachutist_training.practice_passed and
+                #  parachutist_training.medical_certified and
+                parachutist_group.medical_checkup_passed and
+                parachutist_group.equipment_checked and parachutist_group.correct_assignment):
             parachutist_group.request_status = 'Approved'  # Если все чекпоинты выполнены
         else:
             parachutist_group.request_status = 'Denied'  # Если хотя бы один чекпоинт не выполнен
@@ -242,21 +243,22 @@ def set_jump_score(request, instructor_id, jump_group_id, parachutist_id):
         'jump_assignment': jump_assignment,
         'instructor': instructor  # Передаем объект инструктора в контекст
     })
-    
+
+
 def complete_jump_group(request, instructor_id, jump_group_id):
     jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
     instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
     error_message = None
     allowed_group_status = jump_group.status == 'Jump In Progress'
-    
+
     if not allowed_group_status:
         error_message = 'Неподходящий статус прыжковой группы: завершение доступно только после стадии `Прыжок в процессе`'
     else:
         parachutists_ids = JumpGroupParachutist.objects.filter(
-            jump_group_id=jump_group_id, 
+            jump_group_id=jump_group_id,
             request_status='Approved'
         ).values_list('parachutist_id', flat=True)
-        
+
         if not all_parachutists_complete_jump(parachutists_ids=parachutists_ids, jump_group_id=jump_group_id):
             error_message = '''Не все допущенные до прыжка парашютисты завершили прыжок или не всем выставлена оценка за него. 
             Прыжковая группа не может быть завершена.'''
@@ -264,22 +266,22 @@ def complete_jump_group(request, instructor_id, jump_group_id):
             jump_group.status = 'Completed'
             jump_group.save()
             return redirect('jump_group_detail', instructor_id=instructor_id, jump_group_id=jump_group_id)
-        
-    
-    return render(request, 'jump_group_detail.html', {
-            'jump_group': jump_group,
-            'instructor': instructor,
-            'request_data': get_parachutists_for_jump_group_detail(jump_group=jump_group),
-            'error_message': error_message
-        })
 
-    
+    return render(request, 'jump_group_detail.html', {
+        'jump_group': jump_group,
+        'instructor': instructor,
+        'request_data': get_parachutists_for_jump_group_detail(jump_group=jump_group),
+        'error_message': error_message
+    })
+
+
 def all_parachutists_complete_jump(parachutists_ids, jump_group_id):
     for parachutist_id in parachutists_ids:
         result = JumpAssignment.objects.get(jump_group_id=jump_group_id, parachutist_id=parachutist_id)
         if result.completed != True or result.score is None:
             return False
     return True
+
 
 def get_parachutists_for_jump_group_detail(jump_group):
     if jump_group.status == 'Jump In Progress':

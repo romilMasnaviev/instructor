@@ -405,18 +405,18 @@
                                {% if parachutist_in_training_group.practice_passed %}checked{% endif %} disabled>
                     </div>
                     
-                    <div class="checkpoint-item static-checkpoint">
-                        <i class="bi bi-heart-pulse checkpoint-icon"></i>
-                        <label class="checkpoint-label">
-                            Мед. сертификация
-                        <span class="status-badge status-{% if parachutist_in_training_group.medical_certified %}passed{% else %}failed{% endif %}">
-                            {% if parachutist_in_training_group.medical_certified %}Пройдено{% else %}Не пройдено{% endif %}
-                        </span>
-                        </label>
-                        <input class="form-check-input" type="checkbox" 
-                                {% if parachutist_in_training_group.medical_certified %}checked{% endif %} disabled>
-                    </div>
-                    
+{#                    <div class="checkpoint-item static-checkpoint">#}
+{#                        <i class="bi bi-heart-pulse checkpoint-icon"></i>#}
+{#                        <label class="checkpoint-label">#}
+{#                            Мед. сертификация#}
+{#                        <span class="status-badge status-{% if parachutist_in_training_group.medical_certified %}passed{% else %}failed{% endif %}">#}
+{#                            {% if parachutist_in_training_group.medical_certified %}Пройдено{% else %}Не пройдено{% endif %}#}
+{#                        </span>#}
+{#                        </label>#}
+{#                        <input class="form-check-input" type="checkbox" #}
+{#                                {% if parachutist_in_training_group.medical_certified %}checked{% endif %} disabled>#}
+{#                    </div>#}
+{#                    #}
                     <div class="checkpoint-item">
                         <i class="bi bi-heart-pulse checkpoint-icon"></i>
                         <label class="checkpoint-label">Медицинское освидетельствование</label>
