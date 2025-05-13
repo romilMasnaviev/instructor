@@ -135,9 +135,6 @@ def start_pre_flight_preparation(request, instructor_id, jump_group_id):
     return redirect('jump_group_detail', instructor_id=instructor_id, jump_group_id=jump_group_id)
 
 
-# Инструктор изменяет чекпоинты парашютиста в прыжковой группе
-# TODO получение данных о теории и практике из учебной группы
-#  + получение из других сервисов
 def edit_jump_checkpoint(request, instructor_id, jump_group_id, parachutist_id):
     # Находим заявку парашютиста на прыжок в конкретной группе
     parachutist_group = get_object_or_404(JumpGroupParachutist, parachutist_id=parachutist_id,
@@ -295,10 +292,13 @@ def get_parachutists_for_jump_group_detail(jump_group):
     for jgp in jump_group_parachutists:
         assignment = JumpAssignment.objects.filter(parachutist=jgp.parachutist, jump_group=jump_group).first()
         task = assignment.task if assignment else None
+        score = assignment.score if assignment else None
 
         request_data.append({
             'request': jgp,  # Сам объект JumpGroupParachutist
-            'task': task
+            'task': task,
+            'score': score
         })
+        
 
     return request_data
