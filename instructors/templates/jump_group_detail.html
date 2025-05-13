@@ -251,6 +251,10 @@
                 transform: translateX(-50%) translateY(-7px);
             }
         }
+
+        .bi-star-fill {
+            margin-right: 2px;
+        }
     </style>
 </head>
 <body>
@@ -382,6 +386,23 @@
                                 {% if item.request.correct_assignment %}<i class="bi bi-check-circle-fill"></i> Да{% else %}<i class="bi bi-x-circle-fill"></i> Нет{% endif %}
                             </span>
                         </div>
+
+                        {% if jump_group.status in 'Jump In Progress,Completed' and item.score is not None %}
+                        <div class="checkpoint-item">
+                            <div class="checkpoint-icon">
+                                <i class="bi bi-star-fill" style="color: gold;"></i>
+                            </div>
+                            <div class="flex-grow-1">Оценка за прыжок</div>
+                            <span class="passed">
+                                {% with ''|center:item.score as range %}
+                                    {% for _ in range %}
+                                        <i class="bi bi-star-fill" style="color: gold;"></i>
+                                    {% endfor %}
+                                {% endwith %}
+                                ({{ item.score }}/5)
+                            </span>
+                        </div>
+                        {% endif %}
                         
                         {% if jump_group.status == 'Jump In Progress' %}
                         <div class="mt-3">
