@@ -51,7 +51,7 @@ class TrainingGroup(models.Model):
 
 # 4. TrainingGroupParachutist (Обучающийся в группе)
 class TrainingGroupParachutist(models.Model):
-    parachutist = models.ForeignKey(Parachutist, unique=True, on_delete=models.CASCADE)
+    parachutist = models.ForeignKey(Parachutist, on_delete=models.CASCADE)
     group = models.ForeignKey(TrainingGroup, on_delete=models.CASCADE)
     theory_passed = models.BooleanField(default=False)
     practice_passed = models.BooleanField(default=False)
