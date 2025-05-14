@@ -9,9 +9,13 @@ class Parachutist(models.Model):
     middle_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     contact_info = models.CharField(max_length=255)
+    weight = models.PositiveIntegerField(help_text="Вес парашютиста (кг)", default=70)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def get_total_weight(self):
+        return self.weight
 
 
 # 2. Instructor (Инструктор)
@@ -122,6 +126,14 @@ class JumpGroupParachutist(models.Model):
     """
     equipment_checked = models.BooleanField('Снаряжение проверено', default=False)
     correct_assignment = models.BooleanField('Корректное задание', default=False)
+    custom_order = models.PositiveIntegerField(
+        "Порядок сортировки (по умолчанию: высота↑, вес↓)",
+        default=0,
+        help_text="Чем меньше число, тем выше в списке. 0 - использовать сортировку по умолчанию"
+    )
 
     def __str__(self):
         return f"Заявка на прыжок {self.parachutist} в {self.jump_group} ({self.request_status})"
+
+    class Meta:
+        ordering = ['custom_order']

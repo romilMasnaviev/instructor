@@ -52,5 +52,9 @@ urlpatterns = [
         'instructors/<int:instructor_id>/jump_groups/<int:jump_group_id>/parachutists/<int:parachutist_id>/set_jump_score/',
         views.set_jump_score,
         name='set_jump_score'),
+    
+    path('instructor/<int:instructor_id>/jump-group/<int:jump_group_id>/update-order/', 
+         views.update_parachutist_order, 
+         name='update_parachutist_order'),
 
 ]

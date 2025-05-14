@@ -255,6 +255,20 @@
         .bi-star-fill {
             margin-right: 2px;
         }
+
+        .sortable-ghost {
+            opacity: 0.5;
+            background: #c8ebfb;
+        }
+
+        .sortable-chosen {
+            cursor: move;
+        }
+
+        .sortable-drag {
+            opacity: 1 !important;
+        }
+
     </style>
 </head>
 <body>
@@ -313,114 +327,150 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="mb-0" style="font-size: 1.5rem; font-weight: 600;">Парашютисты</h2>
+            <div>
+                <span class="text-muted me-2">Сортировка:</span>
+                <div class="btn-group" role="group">
+                    <a href="?sort_by=default"
+                       class="btn btn-sm btn-outline-primary {% if sort_by == 'default' %}active{% endif %}">
+                        По умолчанию
+                    </a>
+                    <a href="?sort_by=custom"
+                       class="btn btn-sm btn-outline-primary {% if sort_by == 'custom' %}active{% endif %}">
+                        Ручная
+                    </a>
+                </div>
+                {% if sort_by == 'custom' %}
+                <button id="save-order-btn" class="btn btn-sm btn-success ms-2">
+                    <i class="bi bi-save"></i> Сохранить порядок
+                </button>
+                {% endif %}
+            </div>
             <span class="badge bg-primary rounded-pill">{{ request_data|length }}</span>
         </div>
+
+        {% if sort_by == 'custom' %}
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i> Перетащите карточки парашютистов для изменения порядка
+        </div>
+        {% endif %}
         
         {% if request_data %}
-            <div class="row">
-                {% for item in request_data %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="parachutist-card">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            {% if jump_group.status == 'Pre-Flight Preparation' %}
-                                <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
-                                   class="parachutist-name">
-                                    {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
-                                </a>
-                                <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
-                                   class="btn btn-sm btn-edit">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            {% else %}
-                                <span class="parachutist-name">
-                                    {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
-                                </span>
-                            {% endif %}
-                        </div>
-
-                        {% if jump_group.status in 'Jump In Progress,Completed' %}
-                        <div class="request-status mb-2">
-                            <i class="bi bi-file-earmark-text me-1"></i>
-                            Статус заявки: {{ item.request.get_request_status_display }}
-                        </div>
-                        {% endif %}
-                        
-                        <div class="task-item mb-3">
-                            <strong>Задание:</strong> 
-                            {% if item.task %}
-                                {{ item.task }}
-                            {% else %}
-                                <span class="not-assigned">не назначено</span>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="checkpoint-item">
-                            <div class="checkpoint-icon">
-                                <i class="bi bi-heart-pulse"></i>
-                            </div>
-                            <div class="flex-grow-1">Мед. освидетельствование</div>
-                            <span class="{% if item.request.medical_checkup_passed %}passed{% else %}failed{% endif %}">
-                                {% if item.request.medical_checkup_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
-                            </span>
-                        </div>
-                        
-                        <div class="checkpoint-item">
-                            <div class="checkpoint-icon">
-                                <i class="bi bi-shield-check"></i>
-                            </div>
-                            <div class="flex-grow-1">Снаряжение</div>
-                            <span class="{% if item.request.equipment_checked %}passed{% else %}failed{% endif %}">
-                                {% if item.request.equipment_checked %}<i class="bi bi-check-circle-fill"></i> Проверено{% else %}<i class="bi bi-x-circle-fill"></i> Не проверено{% endif %}
-                            </span>
-                        </div>
-                        
-                        <div class="checkpoint-item" style="border-bottom: none;">
-                            <div class="checkpoint-icon">
-                                <i class="bi bi-check2-circle"></i>
-                            </div>
-                            <div class="flex-grow-1">Корректное задание</div>
-                            <span class="{% if item.request.correct_assignment %}passed{% else %}failed{% endif %}">
-                                {% if item.request.correct_assignment %}<i class="bi bi-check-circle-fill"></i> Да{% else %}<i class="bi bi-x-circle-fill"></i> Нет{% endif %}
-                            </span>
-                        </div>
-
-                        {% if jump_group.status in 'Jump In Progress,Completed' and item.score is not None %}
-                        <div class="checkpoint-item">
-                            <div class="checkpoint-icon">
-                                <i class="bi bi-star-fill" style="color: gold;"></i>
-                            </div>
-                            <div class="flex-grow-1">Оценка за прыжок</div>
-                            <span class="passed">
-                                {% with ''|center:item.score as range %}
-                                    {% for _ in range %}
-                                        <i class="bi bi-star-fill" style="color: gold;"></i>
-                                    {% endfor %}
-                                {% endwith %}
-                                ({{ item.score }}/5)
-                            </span>
-                        </div>
-                        {% endif %}
-                        
-                        {% if jump_group.status == 'Jump In Progress' %}
-                        <div class="mt-3">
-                            <a href="{% url 'set_jump_score' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
-                               class="btn btn-action btn-edit w-100">
-                                <i class="bi bi-star-fill me-1"></i> Выставить оценку
+        <div id="parachutists-container" class="row {% if sort_by == 'custom' %}sortable-container{% endif %}">
+            {% for item in request_data %}
+            <div class="col-md-6 col-lg-4 mb-4 {% if sort_by == 'custom' %}sortable-item{% endif %}" 
+                data-parachutist-id="{{ item.request.parachutist.parachutist_id }}"
+                data-jump-group-id="{{ jump_group.id }}">
+                <div class="parachutist-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        {% if jump_group.status == 'Pre-Flight Preparation' %}
+                            <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
+                            class="parachutist-name">
+                                {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
                             </a>
-                        </div>
+                            <a href="{% url 'edit_jump_checkpoint' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
+                            class="btn btn-sm btn-edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        {% else %}
+                            <span class="parachutist-name">
+                                {{ item.request.parachutist.first_name }} {{ item.request.parachutist.last_name }}
+                            </span>
                         {% endif %}
                     </div>
+
+                    {% if jump_group.status in 'Jump In Progress,Completed' %}
+                    <div class="request-status mb-2">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        Статус заявки: {{ item.request.get_request_status_display }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="task-item mb-3">
+                        <strong>Задание:</strong> 
+                        {% if item.task %}
+                            {{ item.task }}
+                        {% else %}
+                            <span class="not-assigned">не назначено</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="checkpoint-item">
+                        <div class="checkpoint-icon">
+                            <i class="bi bi-heart-pulse"></i>
+                        </div>
+                        <div class="flex-grow-1">Мед. освидетельствование</div>
+                        <span class="{% if item.request.medical_checkup_passed %}passed{% else %}failed{% endif %}">
+                            {% if item.request.medical_checkup_passed %}<i class="bi bi-check-circle-fill"></i> Пройдено{% else %}<i class="bi bi-x-circle-fill"></i> Не пройдено{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="checkpoint-item">
+                        <div class="checkpoint-icon">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <div class="flex-grow-1">Общий вес</div>
+                        <span>
+                            {{ item.request.parachutist.get_total_weight }} кг
+                        </span>
+                    </div>
+                    
+                    <div class="checkpoint-item">
+                        <div class="checkpoint-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="flex-grow-1">Снаряжение</div>
+                        <span class="{% if item.request.equipment_checked %}passed{% else %}failed{% endif %}">
+                            {% if item.request.equipment_checked %}<i class="bi bi-check-circle-fill"></i> Проверено{% else %}<i class="bi bi-x-circle-fill"></i> Не проверено{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="checkpoint-item" style="border-bottom: none;">
+                        <div class="checkpoint-icon">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div class="flex-grow-1">Корректное задание</div>
+                        <span class="{% if item.request.correct_assignment %}passed{% else %}failed{% endif %}">
+                            {% if item.request.correct_assignment %}<i class="bi bi-check-circle-fill"></i> Да{% else %}<i class="bi bi-x-circle-fill"></i> Нет{% endif %}
+                        </span>
+                    </div>
+
+                    {% if jump_group.status in 'Jump In Progress,Completed' and item.score is not None %}
+                    <div class="checkpoint-item">
+                        <div class="checkpoint-icon">
+                            <i class="bi bi-star-fill" style="color: gold;"></i>
+                        </div>
+                        <div class="flex-grow-1">Оценка за прыжок</div>
+                        <span class="passed">
+                            {% with ''|center:item.score as range %}
+                                {% for _ in range %}
+                                    <i class="bi bi-star-fill" style="color: gold;"></i>
+                                {% endfor %}
+                            {% endwith %}
+                            ({{ item.score }}/5)
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if jump_group.status == 'Jump In Progress' %}
+                    <div class="mt-3">
+                        <a href="{% url 'set_jump_score' instructor_id=instructor.instructor_id jump_group_id=jump_group.id parachutist_id=item.request.parachutist.parachutist_id %}" 
+                        class="btn btn-action btn-edit w-100">
+                            <i class="bi bi-star-fill me-1"></i> Выставить оценку
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
+        </div>
         {% else %}
-            <div class="alert alert-info d-flex align-items-center">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                В этой группе пока нет парашютистов.
-            </div>
+        <div class="alert alert-info d-flex align-items-center">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            В этой группе пока нет парашютистов.
+        </div>
         {% endif %}
         
         <a href="{% url 'instructor_schedule' instructor_id=instructor.instructor_id %}" class="btn-back">
@@ -460,5 +510,68 @@
             }
         });
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        {% if sort_by == 'custom' %}
+        const container = document.getElementById('parachutists-container');
+        new Sortable(container, {
+            animation: 150,
+            handle: '.parachutist-card',
+            draggable: '.col-md-6',  // или '.sortable-item', если хотите более точно
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+        });
+        {% endif %}
+    });
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    {% if sort_by == 'custom' %}
+    const container = document.getElementById('parachutists-container');
+
+    const sortable = Sortable.create(container, {
+        animation: 150,
+        handle: '.parachutist-card',
+        ghostClass: 'sortable-ghost',
+        onEnd: function () {
+            // Порядок изменился
+            console.log('Новый порядок установлен');
+        }
+    });
+
+    const saveBtn = document.getElementById('save-order-btn');
+    saveBtn.addEventListener('click', function () {
+        const order = [];
+        document.querySelectorAll('.sortable-item').forEach(el => {
+            order.push(el.dataset.parachutistId);
+        });
+
+        fetch("{% url 'update_parachutist_order' instructor_id=instructor.instructor_id jump_group_id=jump_group.id  %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ order })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка при сохранении');
+            return response.json();
+        })
+        .then(data => {
+            alert('Порядок сохранён!');
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Ошибка при сохранении порядка');
+        });
+    });
+    {% endif %}
+});
+</script>
 </body>
 </html>

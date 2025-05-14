@@ -1,6 +1,9 @@
 # views.py
+import json
 from django.db.models import Q
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Instructor, JumpGroupParachutist, Parachutist
 from .models import TrainingGroupParachutist, TrainingGroup
@@ -107,11 +110,34 @@ def jump_group_detail(request, instructor_id, jump_group_id):
     instructor = get_object_or_404(Instructor, instructor_id=instructor_id)
     jump_group = get_object_or_404(JumpGroup, id=jump_group_id)
 
+    sort_by = request.GET.get('sort_by', 'default')
+
     return render(request, 'jump_group_detail.html', {
         'instructor': instructor,
         'jump_group': jump_group,
-        'request_data': get_parachutists_for_jump_group_detail(jump_group=jump_group),
+        'request_data': get_parachutists_for_jump_group_detail(jump_group=jump_group, sort_by=sort_by),
+        'sort_by': sort_by,
     })
+
+@csrf_exempt
+def update_parachutist_order(request, instructor_id, jump_group_id):
+    if request.method == 'POST':
+        try:
+            # Получение данных из JSON-тела запроса
+            data = json.loads(request.body)
+            order_data = data.get('order', [])
+
+            for index, parachutist_id in enumerate(order_data, start=1):
+                JumpGroupParachutist.objects.filter(
+                    jump_group_id=jump_group_id,
+                    parachutist_id=parachutist_id
+                ).update(custom_order=index)
+
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error'}, status=405)
 
 
 # Инструктор начинает предполетную подготовку
@@ -280,12 +306,22 @@ def all_parachutists_complete_jump(parachutists_ids, jump_group_id):
     return True
 
 
-def get_parachutists_for_jump_group_detail(jump_group):
+def get_parachutists_for_jump_group_detail(jump_group, sort_by=None):
     if jump_group.status == 'Jump In Progress':
         jump_group_parachutists = JumpGroupParachutist.objects.filter(jump_group=jump_group, request_status='Approved')
     else:
         # В противном случае показываем всех парашютистов группы
         jump_group_parachutists = JumpGroupParachutist.objects.filter(jump_group=jump_group)
+
+    if sort_by == 'custom':
+        jump_group_parachutists = jump_group_parachutists.order_by('custom_order')
+    elif sort_by is None:
+        ...
+    elif sort_by == 'default' or sort_by is None:
+        jump_group_parachutists = jump_group_parachutists.order_by(
+            '-parachutist__weight',
+            'jump_group__altitude'
+        )
 
     # Для каждого парашютиста найдем задание (если есть)
     request_data = []
